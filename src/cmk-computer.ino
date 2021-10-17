@@ -170,7 +170,7 @@ void print_word(uint16_t  word) {
 void memory_dump(uint16_t addr) {
   lcd.clear();
   print_word(addr); lcd.print(':');
-  for (uint16_t i = addr; i < addr + 4; i++) print_byte(memory[i]);
+  for (uint16_t i = addr; i < addr + 3; i++) print_byte(memory[i]);
   lcd.setCursor(0, 2);
 }
 
@@ -235,8 +235,8 @@ void execute() {
       case STP: return;
       
       case IN: break;
-      case OUT: break;
       
+      case OUT: lcd.print(char(register_A)); break;
       case BIT: zero_flag = ((register_A & register_B) == 0); break;
       case AND: zero_flag = ((register_A &= register_B) == 0); break;
       case OR: zero_flag = ((register_A |= register_B) == 0); break;
@@ -247,8 +247,8 @@ void execute() {
       default: Serial.println("Unknown opcode!"); break;
     }
     
-    print_registers();
-    memory_dump(0x0000);
+    //print_registers();
+    //memory_dump(0x0000);
   }
 }
 
@@ -267,6 +267,7 @@ void setup() {
   
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
+  lcd.noAutoscroll();
   lcd.blink();
 
   // Print a message to the LCD.
@@ -282,6 +283,12 @@ void setup() {
     TAB,
     LDI, 0x08,
     SHR,
+    LDI, 0x61,
+    OUT,
+    LDI, 0x62,
+    OUT,
+    LDI, 0x63,
+    OUT,
     STP
   };
   
@@ -291,7 +298,7 @@ void setup() {
   }
   
   execute();
-  memory_dump(0x0100);
+  //memory_dump(0x0100);
 }
 
 void loop() {
