@@ -89,7 +89,7 @@ uint8_t keymap[numRows][numCols] = {
 };
 
 // map keypad rows and columns
-byte rowPins[numRows] = {10, 9, 8, 7};  // Rows 0 to 3
+byte rowPins[numRows] = {10, 9, 8, 7};     // Rows 0 to 3
 byte colPins[numCols] = {14, 15, 16, 17};  // Columns 0 to 3
 
 // init kepad
@@ -137,7 +137,7 @@ uint8_t  memory[MEMORY_SIZE];
 // CPU registers
 uint8_t  register_A = 0;
 uint8_t  register_B = 0;
-uint8_t  program_counter = 0;
+uint16_t  program_counter = 0;
 bool zero_flag = 0;
 
 /****************************************************************\
@@ -190,7 +190,7 @@ void print_word(uint16_t  word) {
 void memory_dump(uint16_t addr) {
   lcd.clear();
   print_word(addr); lcd.print(':');
-  for (uint16_t i = addr; i < addr + 3; i++) print_byte(memory[i]);
+  for (uint16_t i = addr; i < addr + 4; i++) print_byte(memory[i]);
   lcd.setCursor(0, 2);
 }
 
@@ -213,15 +213,15 @@ void reset_cpu() {
 
 // print debug info
 void print_registers() {
-  Serial.print("Register A: ");
-  Serial.println(register_A, HEX);
-  Serial.print("Register B: ");
-  Serial.println(register_B, HEX);
-  Serial.print("Program counter: ");
-  Serial.println(program_counter, HEX);
-  Serial.print("Zero flag: ");
-  Serial.println(zero_flag, BIN);
-  Serial.println();
+  lcd.print("I:");
+  print_byte(register_A);
+  lcd.print(' ');
+  print_byte(register_B);
+  lcd.print(' ');
+  print_word(program_counter);
+  lcd.print(' ');
+  lcd.println(zero_flag, BIN);
+  lcd.setCursor(0, 2);
 }
 
 // print instruction
@@ -253,7 +253,7 @@ void execute() {
       case CMP: zero_flag = ((register_A - register_B) == 0); break;
       case JMP: if (zero_flag) program_counter = read_word(); break;
       case STP: return;
-      case IN: while ((register_A = myKeypad.getKey()) == NO_KEY) { Serial.println("wait for key...");} break;
+      case IN: while ((register_A = myKeypad.getKey()) == NO_KEY); break;
       case OUT: lcd.print(char(register_A)); break;
       case BIT: zero_flag = ((register_A & register_B) == 0); break;
       case AND: zero_flag = ((register_A &= register_B) == 0); break;
@@ -264,9 +264,6 @@ void execute() {
       case SHR: zero_flag = ((register_A >>= register_B) == 0); break;
       default: Serial.println("Unknown opcode!"); break;
     }
-    
-    //print_registers();
-    //memory_dump(0x0000);
   }
 }
 
@@ -279,18 +276,14 @@ void execute() {
  ================================================================
 \****************************************************************/
 
+// arduino setup
 void setup() {
-  // use pins A0 - A4 as digital pins for keypad
-  pinMode(14, INPUT_PULLUP);
-  pinMode(15, INPUT_PULLUP);
-  pinMode(16, INPUT_PULLUP);
-  pinMode(17, INPUT_PULLUP);
-
   // init serial port for debugging
   Serial.begin(9600);
   
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
+  //lcd.autoscroll();
   lcd.noAutoscroll();
   lcd.blink();
   
@@ -314,18 +307,51 @@ void setup() {
   
 }
 
-void loop() {
+// arduino loop
+void loop() {  
+  // print greetings
+  lcd.print(" 8-bit Computer");
+  lcd.setCursor(0, 2);
   
-  execute();
-  // set the cursor to column 0, line 1
-  // (note: line 1 is the second row, since counting begins with 0):
-  //lcd.setCursor(0, 1);
-  // print the number of seconds since reset:
-  //lcd.print(millis() / 1000);
+  // input buffer
+  uint8_t buffer[16];
+  uint8_t index = 0;
   
+  // init input buffer
+  for (int i = 0; i < 16; i++) buffer[i] = 0;
   
- 
-  
-  
+  // hex editor loop
+  while(true) {
+    
+    
+    
+    // user input
+    char key;
+    
+    // wait for user input
+    while ((key = myKeypad.getKey()) == NO_KEY);
+    uint8_t hex = 0x0e;//key < 0x0a ? (hex = key - '0') : (hex = key - 'a' + 10);
+    if (index % 2) { buffer[index] <<= hex; Serial.println(buffer[index]); }
+    if ((index % 2) == 0) buffer[index - 1] |= hex;
+    index++;
+    lcd.print(key);
+    
+    //Serial.print();
+    
+    if (index == 4 | index == 6 | index == 8 | index == 10) lcd.print(' ');
+    if (index == 12 | key == '*') {
+      index = 0;
+      lcd.clear();
+      uint8_t MSB = buffer[index];
+      uint8_t LSB = buffer[index + 1];
+      uint16_t addr = MSB;
+      addr <<= 8;
+      addr |= LSB;
+      print_byte(buffer[0]);
+      //Serial.println("hex loop");
+      for (int i = 0; i < 16; i++) buffer[i] = 0;
+    }
+  }
+  //execute();
 }
  
