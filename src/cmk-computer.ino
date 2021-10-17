@@ -289,6 +289,7 @@ void setup() {
     OUT,
     LDI, 0x63,
     OUT,
+    LPC, 0x00, 0x0f,
     STP
   };
   
@@ -297,11 +298,10 @@ void setup() {
     if (test_prog[i] == STP) break;
   }
   
-  execute();
-  //memory_dump(0x0100);
 }
 
 void loop() {
+  execute();
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
   //lcd.setCursor(0, 1);
