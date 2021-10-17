@@ -12,6 +12,7 @@
 
 // LCD driver
 #include <LiquidCrystal.h>
+#include <Keypad.h>
 
 /****************************************************************\
  ================================================================
@@ -74,6 +75,25 @@
 
 // init LCD
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+// keypad size
+const byte numRows= 4;
+const byte numCols= 4;
+
+// map keypad keys
+uint8_t keymap[numRows][numCols] = {
+  { '1', '2', '3', 'A'},
+  { '4', '5', '6', 'B'},
+  { '7', '8', '9', 'C'},
+  {  '*','0', 'F', 'D'}
+};
+
+// map keypad rows and columns
+byte rowPins[numRows] = {10, 9, 8, 7};  // Rows 0 to 3
+byte colPins[numCols] = {14, 15, 16, 17};  // Columns 0 to 3
+
+// init kepad
+Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols);
 
 /****************************************************************\
  ================================================================
@@ -233,9 +253,7 @@ void execute() {
       case CMP: zero_flag = ((register_A - register_B) == 0); break;
       case JMP: if (zero_flag) program_counter = read_word(); break;
       case STP: return;
-      
-      case IN: break;
-      
+      case IN: while ((register_A = myKeypad.getKey()) == NO_KEY) { Serial.println("wait for key...");} break;
       case OUT: lcd.print(char(register_A)); break;
       case BIT: zero_flag = ((register_A & register_B) == 0); break;
       case AND: zero_flag = ((register_A &= register_B) == 0); break;
@@ -262,6 +280,12 @@ void execute() {
 \****************************************************************/
 
 void setup() {
+  // use pins A0 - A4 as digital pins for keypad
+  pinMode(14, INPUT_PULLUP);
+  pinMode(15, INPUT_PULLUP);
+  pinMode(16, INPUT_PULLUP);
+  pinMode(17, INPUT_PULLUP);
+
   // init serial port for debugging
   Serial.begin(9600);
   
@@ -269,9 +293,6 @@ void setup() {
   lcd.begin(16, 2);
   lcd.noAutoscroll();
   lcd.blink();
-
-  // Print a message to the LCD.
-  //lcd.print("hello, world!");
   
   // init all
   reset_cpu();
@@ -279,17 +300,10 @@ void setup() {
   
   // put example program into memory
   uint8_t test_prog[] = {
-    LDI, 0x01,            // load 0x45 to A register
-    TAB,
-    LDI, 0x08,
-    SHR,
-    LDI, 0x61,
+    IN,
+    ADD,
     OUT,
-    LDI, 0x62,
-    OUT,
-    LDI, 0x63,
-    OUT,
-    LPC, 0x00, 0x0f,
+    LPC, 0x00, 0x00,
     STP
   };
   
@@ -301,6 +315,7 @@ void setup() {
 }
 
 void loop() {
+  
   execute();
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
