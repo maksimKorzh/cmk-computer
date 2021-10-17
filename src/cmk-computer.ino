@@ -96,13 +96,13 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 #define MEMORY_SIZE 1024
 
 // RAM array
-byte memory[MEMORY_SIZE];
+uint8_t  memory[MEMORY_SIZE];
 
 
 // CPU registers
-byte register_A = 0;
-byte register_B = 0;
-byte program_counter = 0;
+uint8_t  register_A = 0;
+uint8_t  register_B = 0;
+uint8_t  program_counter = 0;
 bool zero_flag = 0;
 bool carry_flag = 0;
 
@@ -116,15 +116,51 @@ bool carry_flag = 0;
 
 // clear RAM
 void reset_memory() {
-  for (int i = 0; i < MEMORY_SIZE; i++)
+  for (uint16_t i = 0; i < MEMORY_SIZE; i++)
     memory[i] = 0;
 }
 
 // read byte from memory
-byte read_memory() {
-  byte value = memory[program_counter];
+uint8_t read_byte() {
+  uint8_t value = memory[program_counter];
   program_counter++;
   return value;
+}
+
+// read word from memory
+uint16_t read_word() {
+  uint8_t MSB = read_byte();
+  uint8_t LSB = read_byte();
+  uint16_t value = MSB;
+  value <<= 8;
+  value |= LSB;
+  
+  Serial.println(value, HEX);
+  
+  return value;
+}
+
+// prints 8-bit data in hex with leading zeroes
+void print_byte(uint8_t  byte) {
+  if (byte<0x10) lcd.print("0");
+  lcd.print(byte, HEX);
+  lcd.print(' ');
+}
+
+// prints 16-bit data in hex with leading zeroes
+void print_word(uint16_t  word) {
+  uint8_t  MSB = byte(word >> 8);
+  uint8_t  LSB = byte(word);
+  if (MSB<0x10) { lcd.print("0"); } lcd.print(MSB,HEX);
+  if (LSB<0x10) { lcd.print("0"); } lcd.print(LSB,HEX);
+}
+
+// dump memory
+void memory_dump(uint16_t addr) {
+  lcd.clear();
+  print_word(addr); lcd.print(':');
+  for (uint16_t i = addr; i < addr + 4; i++) print_byte(memory[i]);
+  lcd.setCursor(0, 2);
 }
 
 
@@ -145,32 +181,8 @@ void reset_cpu() {
   carry_flag = 0;
 }
 
-// execute instruction
-void execute() {
-  byte opcode = read_memory();
-  
-  Serial.println(opcode, HEX);
-  
-  switch (opcode) {
-    case NOP: program_counter = 0; break;
-    case LDI: break;
-    case LDA: break;
-    case TAB: break;
-    case ADD: break;
-    case SUB: break;
-    case STA: break;
-    case SPC: break;
-    case LPC: break;
-    case INC: break;
-    case DEC: break;
-    case JMP: break;
-    case JZ: break;
-    case JC: break;
-    case IN: break;
-    case OUT: break;
-    default: Serial.println("Unknown opcode!"); break;
-  }
-  
+// print debug info
+void print_registers() {
   Serial.print("Register A: ");
   Serial.println(register_A, HEX);
   Serial.print("Register B: ");
@@ -181,6 +193,62 @@ void execute() {
   Serial.println(zero_flag, BIN);
   Serial.print("Carry flag: ");
   Serial.println(carry_flag, BIN);
+  Serial.println();
+}
+
+// print instruction
+void print_instruction(char *name, uint16_t value) {
+  Serial.print(name);
+  Serial.print(" 0x");
+  Serial.println(value, HEX);
+}
+
+// execute instruction
+void execute() {
+  while (true) {
+    // read next opcode
+    uint8_t opcode = read_byte();    
+    
+    // execute instruction
+    switch (opcode) {
+      case NOP:
+        program_counter = 0;
+        Serial.println("All done");
+        return;
+      
+      case LDI:
+        register_A = read_byte();
+        zero_flag = (register_A == 0);
+        break;
+      
+      case LDA:
+        register_A = memory[read_word()];
+        zero_flag = (register_A == 0);
+        break;
+      
+      case TAB: break;
+      case ADD: break;
+      case SUB: break;
+      
+      case STA:
+        memory[read_word()] = register_A;
+        break;
+      
+      
+      case SPC: break;
+      case LPC: break;
+      case INC: break;
+      case DEC: break;
+      case JMP: break;
+      case JZ: break;
+      case JC: break;
+      case IN: break;
+      case OUT: break;
+      default: Serial.println("Unknown opcode!"); break;
+    }
+    
+    print_registers();
+  }
 }
 
 
@@ -196,18 +264,39 @@ void setup() {
   // init serial port for debugging
   Serial.begin(9600);
   
-  // reset CPU
-  reset_cpu();
-  
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
+  lcd.blink();
 
   // Print a message to the LCD.
   //lcd.print("hello, world!");
   
+  // init all
+  reset_cpu();
+  reset_memory();
+  
   // put example program into memory
-  memory[0] = LDI; memory[1] = 0x45;      // LDI $45
+  uint8_t test_prog[] = {
+    LDI, 0x32,            // load 0x45 to A register
+    STA, 0x01, 0x00,
+    LDI, 0x45,
+    STA, 0x01, 0x01,
+    LDI, 0x00,
+    STA, 0x01, 0x02,  
+    LDA, 0x01, 0x00,
+    LDA, 0x01, 0x01,
+    LDA, 0x01, 0x02,
+    0xFF
+  };
+  
+  for (uint16_t i = 0; i < 100; i++) { 
+    if (test_prog[i] == 0xFF) break;
+    memory[i] = test_prog[i];
+  }
+  
+  
   execute();
+  memory_dump(0x0100);
 }
 
 void loop() {
@@ -216,6 +305,7 @@ void loop() {
   //lcd.setCursor(0, 1);
   // print the number of seconds since reset:
   //lcd.print(millis() / 1000);
+  
   
  
   
