@@ -42,24 +42,33 @@
  ================================================================
     
     ----------------------------------------------------------
-     bin  hex  asm description
+          bin   hex  asm  description
     ----------------------------------------------------------
-    0000  0x0  NOP  no operation
-    0001  0x1  LDI  load immediate data to A register
-    0010  0x2  LDA  load data from memory to A register
-    0011  0x3  TAB  transfer data from A to B register
-    0100  0x4  ADD  add A and B, store result to A register
-    0101  0x5  SUB  subtract B from A, store result to A register
-    0110  0x6  STA  set value from A register to memory
-    0111  0x7  SPC  save program counter to memory
-    1000  0x8  LPC  load data from memory to program counter
-    1001  0x9  INC  increment value in memory
-    1010  0xa  DEC  decrement value in memory
-    1011  0xb  JMP  unconditional jump
-    1100  0xc  JZ   jump if zero flag is true
-    1101  0xd  JC   jump if carry flag is true
-    1110  0xe  IN   read character from keypad
-    1111  0xf  OUT  output character to LCD
+    0000 0000  0x00  NOP  no operation
+    0000 0001  0x01  LDI  load immediate data to A register
+    0000 0010  0x02  LDA  load data from memory to A register
+    0000 0011  0x03  TAB  transfer data from A to B register
+    0000 0100  0x04  ADD  add A and B, store result to A register
+    0000 0101  0x05  SUB  subtract B from A, store result to A register
+    0000 0110  0x06  STA  set value from A register to memory
+    0000 0111  0x07  SPC  save program counter to memory
+    0000 1000  0x08  LPC  load data from memory to program counter
+    0000 1001  0x09  INC  increment value in memory
+    0000 1010  0x0a  DEC  decrement value in memory
+    0000 1011  0x0b  CMP  compare register A and B
+    0000 1100  0x0c  JMP  jump if zero flag is true
+    0000 1101  0x0d  STP  stop execution
+    ----------------------------------------------------------
+    0000 1110  0x0e  IN   read character from keypad
+    0000 1111  0x0f  OUT  output character to LCD
+    ----------------------------------------------------------
+    0001 0000  0x10  BIT  A & B, set zero flag
+    0001 0001  0x11  AND  A & B, store result to A register
+    0001 0010  0x12  OR   A | B, store result to A register
+    0001 0011  0x13  XOR  A ^ B, store result to A register
+    0001 0100  0x14  NOT  invert bits in A register
+    0001 0101  0x15  SHL  shift all bits one position left in A register
+    0001 0110  0x16  SHR  shift all bits one position right in A register
  ================================================================
 \****************************************************************/
 
@@ -86,11 +95,18 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 #define LPC 0x08
 #define INC 0x09
 #define DEC 0x0a
-#define JMP 0x0b
-#define JZ  0x0c
-#define JC  0x0d
+#define CMP 0x0b
+#define JMP 0x0c
+#define STP 0x0d
 #define IN  0x0e
 #define OUT 0x0f
+#define BIT 0x10
+#define AND 0x11
+#define OR  0x12
+#define XOR 0x13
+#define NOT 0x14
+#define SHL 0x15
+#define SHR 0x16
 
 // define RAM size
 #define MEMORY_SIZE 1024
@@ -98,13 +114,11 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 // RAM array
 uint8_t  memory[MEMORY_SIZE];
 
-
 // CPU registers
 uint8_t  register_A = 0;
 uint8_t  register_B = 0;
 uint8_t  program_counter = 0;
 bool zero_flag = 0;
-bool carry_flag = 0;
 
 /****************************************************************\
  ================================================================
@@ -134,9 +148,6 @@ uint16_t read_word() {
   uint16_t value = MSB;
   value <<= 8;
   value |= LSB;
-  
-  Serial.println(value, HEX);
-  
   return value;
 }
 
@@ -178,7 +189,6 @@ void reset_cpu() {
   register_B = 0;
   program_counter = 0;
   zero_flag = 0;
-  carry_flag = 0;
 }
 
 // print debug info
@@ -191,8 +201,6 @@ void print_registers() {
   Serial.println(program_counter, HEX);
   Serial.print("Zero flag: ");
   Serial.println(zero_flag, BIN);
-  Serial.print("Carry flag: ");
-  Serial.println(carry_flag, BIN);
   Serial.println();
 }
 
@@ -211,43 +219,36 @@ void execute() {
     
     // execute instruction
     switch (opcode) {
-      case NOP:
-        program_counter = 0;
-        Serial.println("All done");
-        return;
+      case NOP: program_counter++; break;
+      case LDI: zero_flag = ((register_A = read_byte()) == 0); break;
+      case LDA: zero_flag = ((register_A = memory[read_word()]) == 0); break;
+      case TAB: zero_flag = ((register_B = register_A) == 0); break;
+      case ADD: zero_flag = ((register_A += register_B) == 0); break;
+      case SUB: zero_flag = ((register_A -= register_B) == 0); break;
+      case STA: memory[read_word()] = register_A; break;
+      case SPC: memory[read_word()] = program_counter; break;
+      case LPC: program_counter = read_word(); break;
+      case INC: zero_flag = (++memory[read_word()] == 0); break;
+      case DEC: zero_flag = (--memory[read_word()] == 0); break;
+      case CMP: zero_flag = ((register_A - register_B) == 0); break;
+      case JMP: if (zero_flag) program_counter = read_word(); break;
+      case STP: return;
       
-      case LDI:
-        register_A = read_byte();
-        zero_flag = (register_A == 0);
-        break;
-      
-      case LDA:
-        register_A = memory[read_word()];
-        zero_flag = (register_A == 0);
-        break;
-      
-      case TAB: break;
-      case ADD: break;
-      case SUB: break;
-      
-      case STA:
-        memory[read_word()] = register_A;
-        break;
-      
-      
-      case SPC: break;
-      case LPC: break;
-      case INC: break;
-      case DEC: break;
-      case JMP: break;
-      case JZ: break;
-      case JC: break;
       case IN: break;
       case OUT: break;
+      
+      case BIT: zero_flag = ((register_A & register_B) == 0); break;
+      case AND: zero_flag = ((register_A &= register_B) == 0); break;
+      case OR: zero_flag = ((register_A |= register_B) == 0); break;
+      case XOR: zero_flag = ((register_A ^= register_B) == 0); break;
+      case NOT: zero_flag = ((register_A = ~register_A) == 0); break;
+      case SHL: zero_flag = ((register_A <<= register_B) == 0); break;
+      case SHR: zero_flag = ((register_A >>= register_B) == 0); break;
       default: Serial.println("Unknown opcode!"); break;
     }
     
     print_registers();
+    memory_dump(0x0000);
   }
 }
 
@@ -277,23 +278,17 @@ void setup() {
   
   // put example program into memory
   uint8_t test_prog[] = {
-    LDI, 0x32,            // load 0x45 to A register
-    STA, 0x01, 0x00,
-    LDI, 0x45,
-    STA, 0x01, 0x01,
-    LDI, 0x00,
-    STA, 0x01, 0x02,  
-    LDA, 0x01, 0x00,
-    LDA, 0x01, 0x01,
-    LDA, 0x01, 0x02,
-    0xFF
+    LDI, 0x01,            // load 0x45 to A register
+    TAB,
+    LDI, 0x08,
+    SHR,
+    STP
   };
   
   for (uint16_t i = 0; i < 100; i++) { 
-    if (test_prog[i] == 0xFF) break;
     memory[i] = test_prog[i];
+    if (test_prog[i] == STP) break;
   }
-  
   
   execute();
   memory_dump(0x0100);
