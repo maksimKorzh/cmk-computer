@@ -85,7 +85,7 @@ uint8_t keymap[numRows][numCols] = {
   { '1', '2', '3', 'A'},
   { '4', '5', '6', 'B'},
   { '7', '8', '9', 'C'},
-  {  '*','0', 'F', 'D'}
+  { 'E', '0', 'F', 'D'}
 };
 
 // map keypad rows and columns
@@ -305,53 +305,61 @@ void setup() {
     if (test_prog[i] == STP) break;
   }
   
-}
-
-// arduino loop
-void loop() {  
   // print greetings
   lcd.print(" 8-bit Computer");
   lcd.setCursor(0, 2);
   
-  // input buffer
-  uint8_t buffer[16];
-  uint8_t index = 0;
+}
+
+// get user keypress
+char getch() {
+  char key;
+  while ((key = myKeypad.getKey()) == NO_KEY);
+  return key;
+}
+
+// convert ASCII character to HEX number
+uint8_t ascii_to_hex(char ascii) {
+  return ascii <= '9' ? (ascii - '0') : (ascii - 'A' + 10);
+}
+
+// encode address
+uint16_t encode_word() {
+  uint16_t addr = 0;
+  for (int i = 12; i >= 0; i -= 4) {  
+    char input = getch();
+    uint8_t hex = ascii_to_hex(input);
+    if (i) addr |= hex << i;
+    else addr |= hex;
+    lcd.print(hex, HEX);
+  } return addr;
+}
+
+// encode byte
+uint8_t encode_byte() {
+  uint8_t value = 0;
+  for (int i = 4; i >= 0; i -= 4) {  
+    char input = getch();
+    uint8_t hex = ascii_to_hex(input);
+    if (i) value |= hex << i;
+    else value |= hex;
+    lcd.print(hex, HEX);
+  } return value;
+}
+
+// arduino loop
+void loop() {  
+  uint16_t addr = encode_word();
+  lcd.print(':');
+  for (int i = addr; i < addr + 4; i++) {
+    memory[i] = encode_byte();
+    lcd.print(' ');
+    
+    //Serial.print(i, HEX);
+    //Serial.print(':');
+    //Serial.println(memory[i], HEX);
+  } memory_dump(addr);
   
-  // init input buffer
-  for (int i = 0; i < 16; i++) buffer[i] = 0;
-  
-  // hex editor loop
-  while(true) {
-    
-    
-    
-    // user input
-    char key;
-    
-    // wait for user input
-    while ((key = myKeypad.getKey()) == NO_KEY);
-    uint8_t hex = 0x0e;//key < 0x0a ? (hex = key - '0') : (hex = key - 'a' + 10);
-    if (index % 2) { buffer[index] <<= hex; Serial.println(buffer[index]); }
-    if ((index % 2) == 0) buffer[index - 1] |= hex;
-    index++;
-    lcd.print(key);
-    
-    //Serial.print();
-    
-    if (index == 4 | index == 6 | index == 8 | index == 10) lcd.print(' ');
-    if (index == 12 | key == '*') {
-      index = 0;
-      lcd.clear();
-      uint8_t MSB = buffer[index];
-      uint8_t LSB = buffer[index + 1];
-      uint16_t addr = MSB;
-      addr <<= 8;
-      addr |= LSB;
-      print_byte(buffer[0]);
-      //Serial.println("hex loop");
-      for (int i = 0; i < 16; i++) buffer[i] = 0;
-    }
-  }
   //execute();
 }
  
