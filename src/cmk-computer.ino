@@ -258,7 +258,7 @@ void execute() {
     
     // execute instruction
     switch (opcode) {
-      case NOP: program_counter++; break;
+      case NOP: program_counter = 0; return;
       case LDI: zero_flag = ((register_A = read_byte()) == 0); break;
       case LDA: zero_flag = ((register_A = memory[read_word()]) == 0); break;
       case TAB: zero_flag = ((register_B = register_A) == 0); break;
@@ -271,7 +271,7 @@ void execute() {
       case DEC: zero_flag = (--memory[read_word()] == 0); break;
       case CMP: zero_flag = ((register_A - register_B) == 0); break;
       case JMP: if (zero_flag) program_counter = read_word(); break;
-      case STP: return;
+      case STP: program_counter = 0; return;
       case IN: while ((register_A = myKeypad.getKey()) == NO_KEY); break;
       case OUT: lcd.print(char(register_A)); break;
       case BIT: zero_flag = ((register_A & register_B) == 0); break;
