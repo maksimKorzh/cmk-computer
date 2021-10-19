@@ -374,8 +374,12 @@ void loop() {
         lcd.print("Writing to");
         lcd.setCursor(0, 2);
         lcd.print("serial port...");
+        delay(200);
+        lcd.clear();
         for (int i = 0; i < MEMORY_SIZE; i++) {
-          if (!(i % 16)) Serial.println("");
+          print_byte(memory[i]);
+          if (!(i % 5)) lcd.setCursor(0, 2);
+          if (!(i % 10)) { Serial.println(""); lcd.clear(); }
           if ( memory[i] < 0x10) Serial.print("0");
           Serial.print(memory[i], HEX);
           Serial.print(' ');

@@ -1,0 +1,5 @@
+LDI 0xf4
+
+STA 0x0102
+OUT
+
