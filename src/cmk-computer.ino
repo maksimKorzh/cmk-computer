@@ -37,6 +37,36 @@
  ================================================================
 \****************************************************************/
 
+// init LCD
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+// keypad size
+const byte numRows= 4;
+const byte numCols= 4;
+
+// map keypad keys
+uint8_t keymap[numRows][numCols] = {
+  { '1', '2', '3', 'A'},
+  { '4', '5', '6', 'B'},
+  { '7', '8', '9', 'C'},
+  { 'E', '0', 'F', 'D'}
+};
+
+// map keypad rows and columns
+byte rowPins[numRows] = {10, 9, 8, 7};     // Rows 0 to 3
+byte colPins[numCols] = {14, 15, 16, 17};  // Columns 0 to 3
+
+// init kepad
+Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols);
+
+/****************************************************************\
+ ================================================================
+
+                              GLOBALS
+
+ ================================================================
+\****************************************************************/
+
 /****************************************************************\
  ================================================================
                               OPCODES
@@ -70,36 +100,7 @@
     0001 0100  0x14  NOT  invert bits in A register
     0001 0101  0x15  SHL  shift all bits one position left in A register
     0001 0110  0x16  SHR  shift all bits one position right in A register
- ================================================================
-\****************************************************************/
-
-// init LCD
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-
-// keypad size
-const byte numRows= 4;
-const byte numCols= 4;
-
-// map keypad keys
-uint8_t keymap[numRows][numCols] = {
-  { '1', '2', '3', 'A'},
-  { '4', '5', '6', 'B'},
-  { '7', '8', '9', 'C'},
-  { 'E', '0', 'F', 'D'}
-};
-
-// map keypad rows and columns
-byte rowPins[numRows] = {10, 9, 8, 7};     // Rows 0 to 3
-byte colPins[numCols] = {14, 15, 16, 17};  // Columns 0 to 3
-
-// init kepad
-Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols);
-
-/****************************************************************\
- ================================================================
-
-                              GLOBALS
-
+    0001 0111  0x17  CLS  clear LCD display
  ================================================================
 \****************************************************************/
 
@@ -127,6 +128,15 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
 #define NOT 0x14
 #define SHL 0x15
 #define SHR 0x16
+#define CLS 0x17
+
+// define commands
+#define CLEAR 0xfffa
+#define NEW   0xfffb
+#define VIEW  0xfffc
+#define LOAD  0xfffd
+#define SAVE  0xfffe
+#define RUN   0xffff
 
 // define RAM size
 #define MEMORY_SIZE 1024
@@ -171,6 +181,30 @@ uint16_t read_word() {
   return value;
 }
 
+// encode address
+uint16_t encode_word() {
+  uint16_t addr = 0;
+  for (int i = 12; i >= 0; i -= 4) {  
+    char input = getch();
+    uint8_t hex = ascii_to_hex(input);
+    if (i) addr |= hex << i;
+    else addr |= hex;
+    lcd.print(hex, HEX);
+  } return addr;
+}
+
+// encode byte
+uint8_t encode_byte() {
+  uint8_t value = 0;
+  for (int i = 4; i >= 0; i -= 4) {  
+    char input = getch();
+    uint8_t hex = ascii_to_hex(input);
+    if (i) value |= hex << i;
+    else value |= hex;
+    lcd.print(hex, HEX);
+  } return value;
+}
+
 // prints 8-bit data in hex with leading zeroes
 void print_byte(uint8_t  byte) {
   if (byte<0x10) lcd.print("0");
@@ -211,26 +245,6 @@ void reset_cpu() {
   zero_flag = 0;
 }
 
-// print debug info
-void print_registers() {
-  lcd.print("I:");
-  print_byte(register_A);
-  lcd.print(' ');
-  print_byte(register_B);
-  lcd.print(' ');
-  print_word(program_counter);
-  lcd.print(' ');
-  lcd.println(zero_flag, BIN);
-  lcd.setCursor(0, 2);
-}
-
-// print instruction
-void print_instruction(char *name, uint16_t value) {
-  Serial.print(name);
-  Serial.print(" 0x");
-  Serial.println(value, HEX);
-}
-
 // execute instruction
 void execute() {
   while (true) {
@@ -262,6 +276,7 @@ void execute() {
       case NOT: zero_flag = ((register_A = ~register_A) == 0); break;
       case SHL: zero_flag = ((register_A <<= register_B) == 0); break;
       case SHR: zero_flag = ((register_A >>= register_B) == 0); break;
+      case CLS: lcd.clear();
       default: Serial.println("Unknown opcode!"); break;
     }
   }
@@ -276,41 +291,6 @@ void execute() {
  ================================================================
 \****************************************************************/
 
-// arduino setup
-void setup() {
-  // init serial port for debugging
-  Serial.begin(9600);
-  
-  // set up the LCD's number of columns and rows:
-  lcd.begin(16, 2);
-  //lcd.autoscroll();
-  lcd.noAutoscroll();
-  lcd.blink();
-  
-  // init all
-  reset_cpu();
-  reset_memory();
-  
-  // put example program into memory
-  uint8_t test_prog[] = {
-    IN,
-    ADD,
-    OUT,
-    LPC, 0x00, 0x00,
-    STP
-  };
-  
-  for (uint16_t i = 0; i < 100; i++) { 
-    memory[i] = test_prog[i];
-    if (test_prog[i] == STP) break;
-  }
-  
-  // print greetings
-  lcd.print(" 8-bit Computer");
-  lcd.setCursor(0, 2);
-  
-}
-
 // get user keypress
 char getch() {
   char key;
@@ -323,43 +303,108 @@ uint8_t ascii_to_hex(char ascii) {
   return ascii <= '9' ? (ascii - '0') : (ascii - 'A' + 10);
 }
 
-// encode address
-uint16_t encode_word() {
-  uint16_t addr = 0;
-  for (int i = 12; i >= 0; i -= 4) {  
-    char input = getch();
-    uint8_t hex = ascii_to_hex(input);
-    if (i) addr |= hex << i;
-    else addr |= hex;
-    lcd.print(hex, HEX);
-  } return addr;
+// reset computer
+void init_computer() {
+  lcd.clear();
+  lcd.print(" 8-bit Computer");
+  lcd.setCursor(0, 2);
+  reset_cpu();
+  reset_memory();
 }
 
-// encode byte
-uint8_t encode_byte() {
-  uint8_t value = 0;
-  for (int i = 4; i >= 0; i -= 4) {  
-    char input = getch();
-    uint8_t hex = ascii_to_hex(input);
-    if (i) value |= hex << i;
-    else value |= hex;
-    lcd.print(hex, HEX);
-  } return value;
+// arduino setup
+void setup() {
+  // init serial port for debugging
+  Serial.begin(9600);
+  
+  // init LCD
+  lcd.begin(16, 2);
+  lcd.noAutoscroll();
+  lcd.blink();
+  
+  // reset computer  
+  init_computer();
 }
 
 // arduino loop
 void loop() {  
-  uint16_t addr = encode_word();
-  lcd.print(':');
-  for (int i = addr; i < addr + 4; i++) {
-    memory[i] = encode_byte();
-    lcd.print(' ');
-    
-    //Serial.print(i, HEX);
-    //Serial.print(':');
-    //Serial.println(memory[i], HEX);
-  } memory_dump(addr);
-  
-  //execute();
+  while (true) {
+    // get user command/address
+    uint16_t addr = encode_word();
+    lcd.print(':');
+
+    // handle user commands
+    switch (addr) {
+      // clear LCD display
+      case CLEAR:
+        lcd.clear();
+        lcd.print("CLEAR");
+        delay(200);
+        lcd.clear();
+        break;
+      
+      // reset computer
+      case NEW:
+        lcd.clear();
+        lcd.print("NEW  ");
+        lcd.setCursor(3, 2);
+        delay(200);
+        init_computer();
+        break;
+      
+      // print memory dump
+      case VIEW:
+        lcd.clear();
+        lcd.print("VIEW:");
+        memory_dump(encode_word());
+        break;
+      
+      // read program bytes from serial port
+      case LOAD:
+        lcd.clear();
+        lcd.print("LOAD ");
+        break;
+      
+      // write program bytes to serial port
+      case SAVE:
+        lcd.clear();
+        lcd.print("SAVE ");
+        delay(200);
+        lcd.clear();
+        lcd.print("Writing to");
+        lcd.setCursor(0, 2);
+        lcd.print("serial port...");
+        for (int i = 0; i < MEMORY_SIZE; i++) {
+          if (!(i % 16)) Serial.println("");
+          if ( memory[i] < 0x10) Serial.print("0");
+          Serial.print(memory[i], HEX);
+          Serial.print(' ');
+        }
+        lcd.clear();
+        lcd.print("1024 bytes sent");
+        lcd.setCursor(0, 2);
+        break;
+      
+      // execute program
+      case RUN:
+        lcd.clear();
+        lcd.print("RUN  ");
+        lcd.setCursor(3, 2);
+        delay(200);
+        lcd.clear();
+        execute();
+        break;
+      
+      // write bytes to memory
+      default:
+        for (int i = addr; i < addr + 4; i++) {
+          memory[i] = encode_byte();
+          lcd.print(' ');
+        }
+        
+        memory_dump(addr);
+        break;
+    }    
+  }
 }
  
