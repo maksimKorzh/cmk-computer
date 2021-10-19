@@ -1,5 +1,5 @@
-LDI 0xf4
-
-STA 0x0102
+LDI 0x61
 OUT
+STP
+
 

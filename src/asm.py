@@ -41,7 +41,7 @@ opcodes = {
 
 # check input file
 if len(sys.argv) == 1:
-    print("No input files!\nUsage: asm.py prog.asm")
+    print('No input files!\nUsage: asm.py prog.asm')
     sys.exit(1)
 
 # get input file name
@@ -51,7 +51,6 @@ filename = sys.argv[1];
 with open(filename) as input_file:
     # read source code
     src = input_file.read().split('\n')
-
     program = []
 
     # loop over lines
@@ -71,6 +70,15 @@ with open(filename) as input_file:
                 
             except IndexError:
                 pass
-    
 
+with open('prog.bin', 'wb') as output_file:
+    output_file.write(bytes(program))
 
+print('\nYour program bytes:\n');
+print(' '.join([f"{i:#0{4}x}" for i in  program]))
+print('\n1. Type "FFFD" on CMK computer to load the program');
+print('2. Open Arduino IDE => Serial Monitor')
+print('3. Open file "prog.bin" using text editor and copy it\'s content')
+print('4. Paste bytes to Arduino Serial Monitor ans click "send"');
+print('5. Type "FFFF" on CMK computer to run the program');
+print('\nEnjoy epic 8-bit computing experience!\n');

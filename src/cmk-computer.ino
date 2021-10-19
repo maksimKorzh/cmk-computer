@@ -100,6 +100,7 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
     0001 0100  0x14  NOT  invert bits in A register
     0001 0101  0x15  SHL  shift all bits one position left in A register
     0001 0110  0x16  SHR  shift all bits one position right in A register
+    ----------------------------------------------------------
     0001 0111  0x17  CLS  clear LCD display
  ================================================================
 \****************************************************************/
@@ -137,6 +138,10 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
 #define LOAD  0xfffd
 #define SAVE  0xfffe
 #define RUN   0xffff
+
+// input source
+#define KEYPAD 0x01
+#define SERIAL 0x00
 
 // define RAM size
 #define MEMORY_SIZE 1024
@@ -194,10 +199,10 @@ uint16_t encode_word() {
 }
 
 // encode byte
-uint8_t encode_byte() {
+uint8_t encode_byte(int src) {
   uint8_t value = 0;
   for (int i = 4; i >= 0; i -= 4) {  
-    char input = getch();
+    char input = src ? getch() : Serial.read();
     uint8_t hex = ascii_to_hex(input);
     if (i) value |= hex << i;
     else value |= hex;
@@ -277,7 +282,11 @@ void execute() {
       case SHL: zero_flag = ((register_A <<= register_B) == 0); break;
       case SHR: zero_flag = ((register_A >>= register_B) == 0); break;
       case CLS: lcd.clear();
-      default: Serial.println("Unknown opcode!"); break;
+      default:
+        lcd.print("Unknown opcode:");
+        lcd.setCursor(0, 2);
+        print_byte(opcode);
+        break;
     }
   }
 }
@@ -306,6 +315,11 @@ uint8_t ascii_to_hex(char ascii) {
 // reset computer
 void init_computer() {
   lcd.clear();
+  //lcd.print("Poor man's computer and a very very long string, so let's see how it behaves...");
+  /*while(true) {
+    lcd.scrollDisplayLeft();
+    delay(150);
+  }*/
   lcd.print(" 8-bit Computer");
   lcd.setCursor(0, 2);
   reset_cpu();
@@ -355,7 +369,7 @@ void loop() {
       // print memory dump
       case VIEW:
         lcd.clear();
-        lcd.print("VIEW:");
+        lcd.print("VIEW: ");
         memory_dump(encode_word());
         break;
       
@@ -363,6 +377,17 @@ void loop() {
       case LOAD:
         lcd.clear();
         lcd.print("LOAD ");
+        delay(200);
+        lcd.clear();
+        lcd.print("Listening to");
+        lcd.setCursor(0, 2);
+        lcd.print("serial port...");
+        while (Serial.available() == 0);
+        lcd.clear();
+        lcd.print("Loading...");
+        Serial.readBytes(memory, MEMORY_SIZE);
+        lcd.print("  done");
+        lcd.setCursor(0, 2);
         break;
       
       // write program bytes to serial port
@@ -371,21 +396,16 @@ void loop() {
         lcd.print("SAVE ");
         delay(200);
         lcd.clear();
-        lcd.print("Writing to");
-        lcd.setCursor(0, 2);
-        lcd.print("serial port...");
-        delay(200);
-        lcd.clear();
+        lcd.print("Saving...");
+        
         for (int i = 0; i < MEMORY_SIZE; i++) {
-          print_byte(memory[i]);
-          if (!(i % 5)) lcd.setCursor(0, 2);
-          if (!(i % 10)) { Serial.println(""); lcd.clear(); }
+          if (!(i % 10)) Serial.println("");
           if ( memory[i] < 0x10) Serial.print("0");
           Serial.print(memory[i], HEX);
           Serial.print(' ');
         }
-        lcd.clear();
-        lcd.print("1024 bytes sent");
+        
+        lcd.print("   done");
         lcd.setCursor(0, 2);
         break;
       
@@ -402,7 +422,7 @@ void loop() {
       // write bytes to memory
       default:
         for (int i = addr; i < addr + 4; i++) {
-          memory[i] = encode_byte();
+          memory[i] = encode_byte(KEYPAD);
           lcd.print(' ');
         }
         
