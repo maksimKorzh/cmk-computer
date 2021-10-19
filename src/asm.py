@@ -57,13 +57,21 @@ with open(filename) as input_file:
     for line in src:
         if line is not None:
             try:
-                program.append(opcodes[line.split()[0]])
-                value = int(line.split()[1], 16)
+                opcode = line.split()[0]
+                arg = line.split()[1]
+                                    
+                try:    
+                    program.append(opcodes[opcode])
+                except:
+                    if opcode != 'BYTE' and opcode != 'WORD':
+                        print('Unknown opcode!', opcode);
+                        sys.exit(1)
                 
+                value = int(arg, 16)
+
                 if value > 0xff:
                     program.append(value >> 8)
                     program.append(value & 0x00FF)
-                    pass
                 
                 else:
                     program.append(value)
