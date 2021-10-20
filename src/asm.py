@@ -58,15 +58,15 @@ with open(filename) as input_file:
         if line is not None:
             try:
                 opcode = line.split()[0]
-                arg = line.split()[1]
-                                    
-                try:    
+                
+                try:
                     program.append(opcodes[opcode])
                 except:
                     if opcode != 'BYTE' and opcode != 'WORD':
-                        print('Unknown opcode!', opcode);
+                        print('Unknown opcode:', opcode);
                         sys.exit(1)
-                
+                  
+                arg = line.split()[1]                
                 value = int(arg, 16)
 
                 if value > 0xff:
@@ -79,14 +79,10 @@ with open(filename) as input_file:
             except IndexError:
                 pass
 
-with open('prog.bin', 'wb') as output_file:
-    output_file.write(bytes(program))
-
 print('\nYour program bytes:\n');
-print(' '.join([f"{i:#0{4}x}" for i in  program]))
+print(' '.join([f"{i:#0{4}x}" for i in  program]).replace('0x', '').replace(' ', '').upper())
 print('\n1. Type "FFFD" on CMK computer to load the program');
 print('2. Open Arduino IDE => Serial Monitor')
-print('3. Open file "prog.bin" using text editor and copy it\'s content')
-print('4. Paste bytes to Arduino Serial Monitor ans click "send"');
-print('5. Type "FFFF" on CMK computer to run the program');
+print('3. Copy and paste above bytes to Arduino Serial Monitor ans click "send"');
+print('4. Type "FFFF" on CMK computer to run the program');
 print('\nEnjoy epic 8-bit computing experience!\n');

@@ -283,10 +283,12 @@ void execute() {
       case SHR: zero_flag = ((register_A >>= register_B) == 0); break;
       case CLS: lcd.clear();
       default:
+        lcd.clear();
         lcd.print("Unknown opcode:");
         lcd.setCursor(0, 2);
         print_byte(opcode);
-        break;
+        lcd.print("? ");
+        return;
     }
   }
 }
