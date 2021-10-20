@@ -88,7 +88,7 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
     0000 1010  0x0a  DEC  decrement value in memory
     0000 1011  0x0b  CMP  compare register A and B
     0000 1100  0x0c  JMP  jump if zero flag is true
-    0000 1101  0x0d  STP  stop execution
+    0000 1101  0x0d  DBG  print debug info to serial port
     ----------------------------------------------------------
     0000 1110  0x0e  IN   read character from keypad
     0000 1111  0x0f  OUT  output character to LCD
@@ -119,7 +119,7 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
 #define DEC 0x0a
 #define CMP 0x0b
 #define JMP 0x0c
-#define STP 0x0d
+#define DBG 0x0d
 #define IN  0x0e
 #define OUT 0x0f
 #define BIT 0x10
@@ -267,11 +267,10 @@ void execute() {
       case STA: memory[read_word()] = register_A; break;
       case SPC: memory[read_word()] = program_counter; break;
       case LPC: program_counter = read_word(); break;
-      case INC: zero_flag = (++memory[read_word()] == 0); break;
-      case DEC: zero_flag = (--memory[read_word()] == 0); break;
+      case INC: zero_flag = (++register_A == 0); break;
+      case DEC: zero_flag = (--register_A == 0); break;
       case CMP: zero_flag = ((register_A - register_B) == 0); break;
-      case JMP: if (zero_flag) program_counter = read_word(); break;
-      case STP: program_counter = 0; return;
+      case JMP: if (zero_flag) program_counter = read_word(); else read_word(); break;
       case IN: while ((register_A = myKeypad.getKey()) == NO_KEY); break;
       case OUT: lcd.print(char(register_A)); break;
       case BIT: zero_flag = ((register_A & register_B) == 0); break;
@@ -281,7 +280,17 @@ void execute() {
       case NOT: zero_flag = ((register_A = ~register_A) == 0); break;
       case SHL: zero_flag = ((register_A <<= register_B) == 0); break;
       case SHR: zero_flag = ((register_A >>= register_B) == 0); break;
-      case CLS: lcd.clear();
+      case CLS: lcd.clear(); break;
+      case DBG:
+        Serial.print("Register A: ");
+        Serial.println(register_A, HEX);
+        Serial.print("Register B: ");
+        Serial.println(register_B, HEX);
+        Serial.print("Program Counter: ");
+        Serial.println(program_counter, HEX);
+        Serial.print("Zero Flag: ");
+        Serial.println(zero_flag, HEX);
+        break;
       default:
         lcd.clear();
         lcd.print("Unknown opcode:");
@@ -381,9 +390,9 @@ void loop() {
         lcd.print("LOAD ");
         delay(200);
         lcd.clear();
-        lcd.print("Listening to");
+        lcd.print(" Waiting for");
         lcd.setCursor(0, 2);
-        lcd.print("serial port...");
+        lcd.print("incoming data...");
         while (Serial.available() == 0);
         lcd.clear();
         lcd.print("Loading...");

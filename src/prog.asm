@@ -1,11 +1,17 @@
-LDI 0x61
-OUT
-LDI 0x62
-OUT
-LDI 0x63
-OUT
+start:
+  LDI 0x42
+  TAB
+  LDI 0x30
 
+loop:
+  OUT
+  INC
+  DBG
+  CMP
+  JMP clear
+  LPC loop
 
-
-
-
+clear:
+  CLS
+  DBG
+  LPC loop

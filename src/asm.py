@@ -10,6 +10,7 @@
 
 # packages
 import sys
+import json
 
 # define opcodes
 opcodes = {
@@ -26,7 +27,7 @@ opcodes = {
     'DEC': 0x0a,
     'CMP': 0x0b,
     'JMP': 0x0c,
-    'STP': 0x0d,
+    'DBG': 0x0d,
     'IN' : 0x0e,
     'OUT': 0x0f,
     'BIT': 0x10,
@@ -38,6 +39,9 @@ opcodes = {
     'SHR': 0x16,
     'CLS': 0x17
 }
+
+# program labels
+labels = {}
 
 # check input file
 if len(sys.argv) == 1:
@@ -52,22 +56,56 @@ with open(filename) as input_file:
     # read source code
     src = input_file.read().split('\n')
     program = []
+    byte_count = -1
 
-    # loop over lines
+    # init labels
     for line in src:
-        if line is not None:
+        if line != '':
+            if line[0] == ';': continue
             try:
+                byte_count += len(line.split(';')[0].split())
+                try:
+                    if len(line.split(';')[0].split()[1]) == 6: byte_count += 1
+                    if '0x' not in line.split(';')[0].split()[1]: byte_count += 1
+                
+                except:
+                    pass
+                
+                if ':' in line:
+                    labels[line[:-1]] = f'{byte_count:#0{6}x}'
+                    byte_count -= 1
+                
+            except IndexError:
+                pass
+
+    # assemble code
+    for line in src:
+        if line != '':
+            try:
+                if ':' in line: continue
+                if line.strip()[0] == ';': continue
                 opcode = line.split()[0]
                 
-                try:
-                    program.append(opcodes[opcode])
+                try: program.append(opcodes[opcode])
                 except:
                     if opcode != 'BYTE' and opcode != 'WORD':
                         print('Unknown opcode:', opcode);
                         sys.exit(1)
                   
                 arg = line.split()[1]                
-                value = int(arg, 16)
+                if ('0x00') in arg and len(arg) == 6: program.append(0);
+                
+                try:
+                    value = int(arg, 16)
+                
+                except:
+                    try:
+                        if ('0x00') in labels[arg] and len(labels[arg]) == 6: program.append(0);
+                        value = int(labels[arg], 16)
+                    
+                    except:
+                        print('Label "' + arg + '" doesn\'t exist!');
+                        sys.exit(1)
 
                 if value > 0xff:
                     program.append(value >> 8)
@@ -75,12 +113,14 @@ with open(filename) as input_file:
                 
                 else:
                     program.append(value)
-                
+
             except IndexError:
                 pass
 
-print('\nYour program bytes:\n');
-print(' '.join([f"{i:#0{4}x}" for i in  program]).replace('0x', '').replace(' ', '').upper())
+print('\nYOUR PROGRAM LABELS:')
+print(json.dumps(labels, indent=2))
+print('\nYOUR PROGRAM BYTES:');
+print(' '.join([f'{i:#0{4}x}' for i in  program]).replace('0x', '').replace(' ', '').upper())
 print('\n1. Type "FFFD" on CMK computer to load the program');
 print('2. Open Arduino IDE => Serial Monitor')
 print('3. Copy and paste above bytes to Arduino Serial Monitor ans click "send"');
