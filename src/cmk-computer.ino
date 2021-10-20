@@ -206,7 +206,7 @@ uint8_t encode_byte(int src) {
     uint8_t hex = ascii_to_hex(input);
     if (i) value |= hex << i;
     else value |= hex;
-    lcd.print(hex, HEX);
+    if (src) lcd.print(hex, HEX);
   } return value;
 }
 
@@ -341,7 +341,7 @@ void setup() {
 }
 
 // arduino loop
-void loop() {  
+void loop() {
   while (true) {
     // get user command/address
     uint16_t addr = encode_word();
@@ -385,7 +385,13 @@ void loop() {
         while (Serial.available() == 0);
         lcd.clear();
         lcd.print("Loading...");
-        Serial.readBytes(memory, MEMORY_SIZE);
+        
+        for (int i = 0; i < MEMORY_SIZE; i++) {
+          if ((i % 8) == 0) delay(1000);  // wait until serial recieve buffer updates
+          if (Serial.available()) memory[i] = encode_byte(SERIAL);
+          else break;
+        }
+        
         lcd.print("  done");
         lcd.setCursor(0, 2);
         break;
@@ -399,10 +405,9 @@ void loop() {
         lcd.print("Saving...");
         
         for (int i = 0; i < MEMORY_SIZE; i++) {
-          if (!(i % 10)) Serial.println("");
           if ( memory[i] < 0x10) Serial.print("0");
           Serial.print(memory[i], HEX);
-          Serial.print(' ');
+          Serial.println(Serial.available());
         }
         
         lcd.print("   done");
