@@ -108,6 +108,7 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
     0001 1011  0x1b  NCR  disable cursor
     0001 1100  0x1c  UDG  user defined character
     0001 1101  0x1d  SPR  draw sprite (user defined character)
+    0001 1110  0x1e  POS  set cursor at given position
  ================================================================
 \****************************************************************/
 
@@ -142,6 +143,7 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
 #define NCR 0x1b
 #define UDG 0x1c
 #define SPR 0x1d
+#define POS 0x1e
 
 // define commands
 #define CLEAR 0xfffa
@@ -308,6 +310,7 @@ void execute() {
       case SDR: lcd.scrollDisplayRight(); break;
       case CRS: lcd.blink(); break;
       case NCR: lcd.noBlink(); break;
+      case POS: lcd.setCursor(register_A, register_B); break;
       case UDG:
         lcd.createChar(register_A, memory + register_B);
         lcd.begin(16, 2);

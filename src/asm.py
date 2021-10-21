@@ -43,7 +43,8 @@ opcodes = {
     'CRS': 0x1a,
     'NCR': 0x1b,
     'UDG': 0x1c,
-    'SPR': 0x1d
+    'SPR': 0x1d,
+    'POS': 0x1e
 }
 
 # program labels
@@ -72,7 +73,9 @@ with open(filename) as input_file:
                 byte_count += len(line.split(';')[0].split())
                 try:
                     if len(line.split(';')[0].split()[1]) == 6: byte_count += 1
-                    if line.split(';')[0].split()[1].isalpha(): byte_count += 1
+                    if line.split(';')[0].split()[1][0].isalpha():
+                        if line.split()[0] in ['LDA', 'STA', 'LPC', 'JMP']:
+                            byte_count += 1
                 
                 except:
                     pass
@@ -108,7 +111,10 @@ with open(filename) as input_file:
                 
                 except:
                     try:
-                        if ('0x00') in labels[arg] and len(labels[arg]) == 6: program.append(0);
+                        if ('0x00') in labels[arg] and len(labels[arg]) == 6:
+                            if opcode in ['LDA', 'STA', 'LPC', 'JMP']:
+                                program.append(0);
+                        
                         value = int(labels[arg], 16)
                     
                     except:
