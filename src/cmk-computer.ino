@@ -418,7 +418,6 @@ void loop() {
         for (int i = 0; i < MEMORY_SIZE; i++) {
           if ( memory[i] < 0x10) Serial.print("0");
           Serial.print(memory[i], HEX);
-          Serial.println(Serial.available());
         }
         
         lcd.print("   done");
