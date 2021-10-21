@@ -1,17 +1,20 @@
 start:
-  LDI 0x42
-  TAB
-  LDI 0x30
+  lda 0x00
+  
+  udg
+  spr
+  crs
 
 loop:
-  OUT
-  INC
-  DBG
-  CMP
-  JMP clear
-  LPC loop
+  lpc end
 
-clear:
-  CLS
-  DBG
-  LPC loop
+sprite_0:
+  BYTE 0x1f  ; 0001 1111
+  BYTE 0x11  ; 0001 0001
+  BYTE 0x11  ; 0001 0001
+  BYTE 0x11  ; 0001 0001
+  BYTE 0x11  ; 0001 0001
+  BYTE 0x11  ; 0001 0001
+  BYTE 0x1f  ; 0001 1111
+
+end:

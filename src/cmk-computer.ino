@@ -102,6 +102,12 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
     0001 0110  0x16  SHR  shift all bits one position right in A register
     ----------------------------------------------------------
     0001 0111  0x17  CLS  clear LCD display
+    0001 1000  0x18  SDL  Scrolls the contents of the display one space to the left
+    0001 1001  0x19  SDR  Scrolls the contents of the display one space to the right
+    0001 1010  0x1a  CRS  enable cursor
+    0001 1011  0x1b  NCR  disable cursor
+    0001 1100  0x1c  UDG  user defined character
+    0001 1101  0x1d  SPR  draw sprite (user defined character)
  ================================================================
 \****************************************************************/
 
@@ -130,6 +136,12 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
 #define SHL 0x15
 #define SHR 0x16
 #define CLS 0x17
+#define SDL 0x18
+#define SDR 0x19
+#define CRS 0x1a
+#define NCR 0x1b
+#define UDG 0x1c
+#define SPR 0x1d
 
 // define commands
 #define CLEAR 0xfffa
@@ -154,6 +166,7 @@ uint8_t  register_A = 0;
 uint8_t  register_B = 0;
 uint16_t  program_counter = 0;
 bool zero_flag = 0;
+
 
 /****************************************************************\
  ================================================================
@@ -250,6 +263,16 @@ void reset_cpu() {
   zero_flag = 0;
 }
 
+byte smiley[8] = {
+  B00000,
+  B10001,
+  B00000,
+  B00000,
+  B10001,
+  B01110,
+  B00000
+};
+
 // execute instruction
 void execute() {
   while (true) {
@@ -281,6 +304,16 @@ void execute() {
       case SHL: zero_flag = ((register_A <<= register_B) == 0); break;
       case SHR: zero_flag = ((register_A >>= register_B) == 0); break;
       case CLS: lcd.clear(); break;
+      case SDL: lcd.scrollDisplayLeft(); break;
+      case SDR: lcd.scrollDisplayRight(); break;
+      case CRS: lcd.blink(); break;
+      case NCR: lcd.noBlink(); break;
+      case UDG:
+        lcd.createChar(register_A, memory + register_B);
+        lcd.begin(16, 2);
+        break;
+      
+      case SPR: lcd.write(byte(register_A)); break;
       case DBG:
         Serial.print("Register A: ");
         Serial.println(register_A, HEX);
@@ -326,11 +359,6 @@ uint8_t ascii_to_hex(char ascii) {
 // reset computer
 void init_computer() {
   lcd.clear();
-  //lcd.print("Poor man's computer and a very very long string, so let's see how it behaves...");
-  /*while(true) {
-    lcd.scrollDisplayLeft();
-    delay(150);
-  }*/
   lcd.print(" 8-bit Computer");
   lcd.setCursor(0, 2);
   reset_cpu();
@@ -352,7 +380,7 @@ void setup() {
 }
 
 // arduino loop
-void loop() {
+void loop() {  
   while (true) {
     // get user command/address
     uint16_t addr = encode_word();

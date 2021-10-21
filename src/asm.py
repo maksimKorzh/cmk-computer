@@ -37,7 +37,13 @@ opcodes = {
     'NOT': 0x14,
     'SHL': 0x15,
     'SHR': 0x16,
-    'CLS': 0x17
+    'CLS': 0x17,
+    'SDL': 0x18,
+    'SDR': 0x19,
+    'CRS': 0x1a,
+    'NCR': 0x1b,
+    'UDG': 0x1c,
+    'SPR': 0x1d
 }
 
 # program labels
@@ -54,19 +60,19 @@ filename = sys.argv[1];
 # open asm source file
 with open(filename) as input_file:
     # read source code
-    src = input_file.read().split('\n')
+    src = [l.upper() for l in input_file.read().split('\n')]
     program = []
     byte_count = -1
 
     # init labels
     for line in src:
         if line != '':
-            if line[0] == ';': continue
+            if line.strip()[0] == ';': continue
             try:
                 byte_count += len(line.split(';')[0].split())
                 try:
                     if len(line.split(';')[0].split()[1]) == 6: byte_count += 1
-                    if '0x' not in line.split(';')[0].split()[1]: byte_count += 1
+                    if line.split(';')[0].split()[1].isalpha(): byte_count += 1
                 
                 except:
                     pass
@@ -74,6 +80,8 @@ with open(filename) as input_file:
                 if ':' in line:
                     labels[line[:-1]] = f'{byte_count:#0{6}x}'
                     byte_count -= 1
+                
+                if 'BYTE' in line or 'WORD' in line: byte_count -= 1
                 
             except IndexError:
                 pass
