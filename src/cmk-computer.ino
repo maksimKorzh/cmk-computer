@@ -77,16 +77,16 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
     ----------------------------------------------------------
     0000 0000  0x00  NOP  no operation
     0000 0001  0x01  LDI  load immediate data to A register
-    0000 0010  0x02  LDA  load data from memory to A register
+    0000 0010  0x02  LDA  load data from memory to A register with register B offset
     0000 0011  0x03  TAB  transfer data from A to B register
     0000 0100  0x04  ADD  add A and B, store result to A register
     0000 0101  0x05  SUB  subtract B from A, store result to A register
     0000 0110  0x06  STA  set value from A register to memory
     0000 0111  0x07  SPC  save program counter to memory
     0000 1000  0x08  LPC  load data from memory to program counter
-    0000 1001  0x09  INC  increment value in memory
-    0000 1010  0x0a  DEC  decrement value in memory
-    0000 1011  0x0b  CMP  compare register A and B
+    0000 1001  0x09  INC  increment value in register B
+    0000 1010  0x0a  DEC  decrement value in register B
+    0000 1011  0x0b  CMP  compare register A and immediate value
     0000 1100  0x0c  JMP  jump if zero flag is true
     0000 1101  0x0d  DBG  print debug info to serial port
     ----------------------------------------------------------
@@ -108,7 +108,9 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
     0001 1011  0x1b  NCR  disable cursor
     0001 1100  0x1c  UDG  user defined character
     0001 1101  0x1d  SPR  draw sprite (user defined character)
-    0001 1110  0x1e  POS  set cursor at given position
+    0001 1110  0x1e  POS  set cursor at position (register A = column, register B = row)
+    ----------------------------------------------------------
+    0001 1111  0x1f  DLY  delay execution
  ================================================================
 \****************************************************************/
 
@@ -144,6 +146,7 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
 #define UDG 0x1c
 #define SPR 0x1d
 #define POS 0x1e
+#define DLY 0x1f
 
 // define commands
 #define CLEAR 0xfffa
@@ -152,10 +155,6 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
 #define LOAD  0xfffd
 #define SAVE  0xfffe
 #define RUN   0xffff
-
-// input source
-#define KEYPAD 0x01
-#define SERIAL 0x00
 
 // define RAM size
 #define MEMORY_SIZE 1024
@@ -210,18 +209,21 @@ uint16_t encode_word() {
     if (i) addr |= hex << i;
     else addr |= hex;
     lcd.print(hex, HEX);
-  } return addr;
+    
+  }
+  delay(180);
+  return addr;
 }
 
 // encode byte
-uint8_t encode_byte(int src) {
+uint8_t encode_byte() {
   uint8_t value = 0;
   for (int i = 4; i >= 0; i -= 4) {  
-    char input = src ? getch() : Serial.read();
+    char input = getch();
     uint8_t hex = ascii_to_hex(input);
     if (i) value |= hex << i;
     else value |= hex;
-    if (src) lcd.print(hex, HEX);
+    lcd.print(hex, HEX);
   } return value;
 }
 
@@ -265,16 +267,6 @@ void reset_cpu() {
   zero_flag = 0;
 }
 
-byte smiley[8] = {
-  B00000,
-  B10001,
-  B00000,
-  B00000,
-  B10001,
-  B01110,
-  B00000
-};
-
 // execute instruction
 void execute() {
   while (true) {
@@ -285,16 +277,16 @@ void execute() {
     switch (opcode) {
       case NOP: program_counter = 0; return;
       case LDI: zero_flag = ((register_A = read_byte()) == 0); break;
-      case LDA: zero_flag = ((register_A = memory[read_word()]) == 0); break;
+      case LDA: zero_flag = ((register_A = memory[(read_word() + register_B)]) == 0); break;
       case TAB: zero_flag = ((register_B = register_A) == 0); break;
       case ADD: zero_flag = ((register_A += register_B) == 0); break;
       case SUB: zero_flag = ((register_A -= register_B) == 0); break;
       case STA: memory[read_word()] = register_A; break;
       case SPC: memory[read_word()] = program_counter; break;
       case LPC: program_counter = read_word(); break;
-      case INC: zero_flag = (++register_A == 0); break;
-      case DEC: zero_flag = (--register_A == 0); break;
-      case CMP: zero_flag = ((register_A - register_B) == 0); break;
+      case INC: zero_flag = (++register_B == 0); break;
+      case DEC: zero_flag = (--register_B == 0); break;
+      case CMP: zero_flag = ((register_A - read_byte()) == 0); break;
       case JMP: if (zero_flag) program_counter = read_word(); else read_word(); break;
       case IN: while ((register_A = myKeypad.getKey()) == NO_KEY); break;
       case OUT: lcd.print(char(register_A)); break;
@@ -311,11 +303,11 @@ void execute() {
       case CRS: lcd.blink(); break;
       case NCR: lcd.noBlink(); break;
       case POS: lcd.setCursor(register_A, register_B); break;
+      case DLY: delay(1000); break;
       case UDG:
         lcd.createChar(register_A, memory + register_B);
         lcd.begin(16, 2);
         break;
-      
       case SPR: lcd.write(byte(register_A)); break;
       case DBG:
         Serial.print("Register A: ");
@@ -362,7 +354,7 @@ uint8_t ascii_to_hex(char ascii) {
 // reset computer
 void init_computer() {
   lcd.clear();
-  lcd.print(" 8-bit Computer");
+  lcd.print("Code Monkey King");
   lcd.setCursor(0, 2);
   reset_cpu();
   reset_memory();
@@ -380,6 +372,14 @@ void setup() {
   
   // reset computer  
   init_computer();
+}
+
+void shift_value(int i) {
+  int count = 2;
+  while (true) {
+    if (memory[i - count] != 0) { memory[i - count + 1] = memory[i - 1]; break; }
+    else count++;
+  }
 }
 
 // arduino loop
@@ -427,14 +427,41 @@ void loop() {
         while (Serial.available() == 0);
         lcd.clear();
         lcd.print("Loading...");
+        Serial.readBytes(memory, MEMORY_SIZE);
         
-        for (int i = 0; i < MEMORY_SIZE; i++) {
-          if ((i % 8) == 0) delay(1000);  // wait until serial recieve buffer updates
-          if (Serial.available()) memory[i] = encode_byte(SERIAL);
-          else break;
+        
+        for (int i = 0; i < 100; i++) {
+          memory[i] = ascii_to_hex(memory[i]);
+          if ((i % 2) == 0) memory[i] <<= 4;
+          else {
+            memory[i - 1] |= memory[i];
+            memory[i] = 0;
+
+            
+            
+          }
         }
         
-        lcd.print("  done");
+        for (int i = 0; i < 100; i++) {
+          if ((i % 2) == 0) {
+            if (i) {
+              memory[i - ((int)(i / 2))] = memory[i];
+              memory[i] = 0;
+              
+              /*Serial.print(i);
+              Serial.print(' ');
+              Serial.print((int)(i / 2));
+              Serial.println("");*/
+            }
+          }
+        }
+        
+        /*for (int i = 0; i < 100; i++) {
+          Serial.print(memory[i], HEX);
+          Serial.print(' ');
+        }*/
+        
+        lcd.print("  done"); delay(1000);
         lcd.setCursor(0, 2);
         break;
       
@@ -468,7 +495,7 @@ void loop() {
       // write bytes to memory
       default:
         for (int i = addr; i < addr + 4; i++) {
-          memory[i] = encode_byte(KEYPAD);
+          memory[i] = encode_byte();
           lcd.print(' ');
         }
         

@@ -1,13 +1,15 @@
 start:
   ldi 0x00
+  tab
 
 print:
-  lda count
-  ;lda hello    ; load char at address 'hello + register B' to A register
-  
-  
-  ;cmp
-  ;jmp end
+  lda hello
+  dbg
+  cmp 0x00
+  jmp exit
+  dly
+  out
+  inc
   lpc print
 
 hello:
@@ -24,10 +26,13 @@ hello:
   byte 0x6c    ; 'l'
   byte 0x64    ; 'd'
   byte 0x21    ; '!'
+  
+hello_end:
   byte 0x00    ; zero terminating character
 
-count:
-  byte hello
-
-end:
+exit:
   byte 0x00    ; execution stops here
+  ldi 0x61
+  out
+  
+  

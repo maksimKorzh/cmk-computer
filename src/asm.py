@@ -44,7 +44,8 @@ opcodes = {
     'NCR': 0x1b,
     'UDG': 0x1c,
     'SPR': 0x1d,
-    'POS': 0x1e
+    'POS': 0x1e,
+    'DLY': 0x1f
 }
 
 # program labels
@@ -133,8 +134,14 @@ with open(filename) as input_file:
             except IndexError:
                 pass
 
+if (len(program) > 1024):
+    print('Your program exceeds CMK computer RAM by', len(program) - 1024, 'bytes!');
+    sys.exit();
+
 print('\nYOUR PROGRAM LABELS:')
 print(json.dumps(labels, indent=2))
+print('\nYOUR PROGRAM LENGTH:')
+print(len(program), 'bytes')
 print('\nYOUR PROGRAM BYTES:');
 print(' '.join([f'{i:#0{4}x}' for i in  program]).replace('0x', '').replace(' ', '').upper())
 print('\n1. Type "FFFD" on CMK computer to load the program');
