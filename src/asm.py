@@ -68,8 +68,8 @@ with open(filename) as input_file:
     # init labels
     for line in src:
         if line != '':
-            if line.strip()[0] == ';': continue
             try:
+                if line.strip()[0] == ';': continue
                 byte_count += len(line.split(';')[0].split())
                 try:
                     if len(line.split(';')[0].split()[1]) == 6: byte_count += 1
@@ -107,8 +107,9 @@ with open(filename) as input_file:
                 if ('0x00') in arg and len(arg) == 6: program.append(0);
                 
                 try:
+                    if arg[0] == "'" and arg[-1] == "'": print(arg[1])
                     value = int(arg, 16)
-                
+                    
                 except:
                     try:
                         if ('0x00') in labels[arg] and len(labels[arg]) == 6:
@@ -116,6 +117,7 @@ with open(filename) as input_file:
                                 program.append(0);
                         
                         value = int(labels[arg], 16)
+                        
                     
                     except:
                         print('Label "' + arg + '" doesn\'t exist!');
