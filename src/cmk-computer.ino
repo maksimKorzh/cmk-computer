@@ -303,7 +303,7 @@ void execute() {
       case CRS: lcd.blink(); break;
       case NCR: lcd.noBlink(); break;
       case POS: lcd.setCursor(register_A, register_B); break;
-      case DLY: delay(1000); break;
+      case DLY: delay(read_byte()); break;
       case UDG:
         lcd.createChar(register_A, memory + register_B);
         lcd.begin(16, 2);
@@ -428,8 +428,7 @@ void loop() {
         lcd.clear();
         lcd.print("Loading...");
         Serial.readBytes(memory, MEMORY_SIZE);
-        
-        
+                
         for (int i = 0; i < 100; i++) {
           memory[i] = ascii_to_hex(memory[i]);
           if ((i % 2) == 0) memory[i] <<= 4;
@@ -447,19 +446,10 @@ void loop() {
             if (i) {
               memory[i - ((int)(i / 2))] = memory[i];
               memory[i] = 0;
-              
-              /*Serial.print(i);
-              Serial.print(' ');
-              Serial.print((int)(i / 2));
-              Serial.println("");*/
             }
           }
         }
         
-        /*for (int i = 0; i < 100; i++) {
-          Serial.print(memory[i], HEX);
-          Serial.print(' ');
-        }*/
         
         lcd.print("  done"); delay(1000);
         lcd.setCursor(0, 2);

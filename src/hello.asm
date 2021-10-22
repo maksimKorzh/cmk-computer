@@ -4,10 +4,9 @@ start:
 
 print:
   lda hello
-  dbg
   cmp 0x00
   jmp exit
-  dly
+  dly 0xff
   out
   inc
   lpc print
@@ -31,8 +30,10 @@ hello_end:
   byte 0x00    ; zero terminating character
 
 exit:
-  byte 0x00    ; execution stops here
-  ldi 0x61
-  out
+  ldi 0x02
+  tab
+  ldi 0x00
+  pos
+  byte 0x00
   
   
