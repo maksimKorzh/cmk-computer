@@ -24,7 +24,7 @@ opcodes = {
     'SPC': 0x07,
     'LPC': 0x08,
     'INC': 0x09,
-    'DEC': 0x0a,
+    'DCR': 0x0a,
     'CMP': 0x0b,
     'JMP': 0x0c,
     'DBG': 0x0d,

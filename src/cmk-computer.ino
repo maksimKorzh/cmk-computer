@@ -10,9 +10,10 @@
 ================================================================
 \****************************************************************/
 
-// LCD driver
+// libraries
 #include <LiquidCrystal.h>
 #include <Keypad.h>
+
 
 /****************************************************************\
  ================================================================
@@ -37,35 +38,50 @@
  ================================================================
 \****************************************************************/
 
+// uncomment to rotate keypad CCW, enable LCD shield buttons
+//#define CMK_HARDWARE
+
+// LCD pins
+#define RS 8    // LCD reset pin
+#define En 9    // LCD enable pin
+#define D4 4    // LCD data pin 4
+#define D5 5    // LCD data pin 5
+#define D6 6    // LCD data pin 6
+#define D7 7    // LCD data pin 7
+
 // init LCD
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+LiquidCrystal lcd(RS, En, D4, D5, D6, D7);
 
 // keypad size
-const byte numRows= 4;
-const byte numCols= 4;
+const byte num_rows= 4;
+const byte num_cols= 4;
 
+#ifdef CMK_HARDWARE
 // map keypad keys
-uint8_t keymap[numRows][numCols] = {
+uint8_t keymap[num_rows][num_cols] = {
+  {'A', 'B', 'C', 'D'},
+  {'3', '6', '9', 'F'},
+  {'2', '5', '8', '0'},
+  {'1', '4', '7', 'E'}
+};
+#else
+// map keypad keys
+uint8_t keymap[num_rows][num_cols] = {
   { '1', '2', '3', 'A'},
   { '4', '5', '6', 'B'},
   { '7', '8', '9', 'C'},
   { 'E', '0', 'F', 'D'}
 };
+#endif
 
 // map keypad rows and columns
-byte rowPins[numRows] = {10, 9, 8, 7};     // Rows 0 to 3
-byte colPins[numCols] = {14, 15, 16, 17};  // Columns 0 to 3
+byte row_pins[num_rows] = {12, 11, 3, 2};     // Rows 0 to 3
+byte col_pins[num_cols] = {A4, A3, A2, A1};  // Columns 0 to 3
+
 
 // init kepad
-Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols);
+Keypad myKeypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_cols);
 
-/****************************************************************\
- ================================================================
-
-                              GLOBALS
-
- ================================================================
-\****************************************************************/
 
 /****************************************************************\
  ================================================================
@@ -85,7 +101,7 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
     0000 0111  0x07  SPC  save program counter to memory
     0000 1000  0x08  LPC  load data from memory to program counter
     0000 1001  0x09  INC  increment value in register B
-    0000 1010  0x0a  DEC  decrement value in register B
+    0000 1010  0x0a  DCR  decrement value in register B
     0000 1011  0x0b  CMP  compare register A and immediate value
     0000 1100  0x0c  JMP  jump if zero flag is true
     0000 1101  0x0d  DBG  print debug info to serial port
@@ -125,7 +141,7 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, numRows, numCols)
 #define SPC 0x07
 #define LPC 0x08
 #define INC 0x09
-#define DEC 0x0a
+#define DCR 0x0a
 #define CMP 0x0b
 #define JMP 0x0c
 #define DBG 0x0d
@@ -285,7 +301,7 @@ void execute() {
       case SPC: memory[read_word()] = program_counter; break;
       case LPC: program_counter = read_word(); break;
       case INC: zero_flag = (++register_B == 0); break;
-      case DEC: zero_flag = (--register_B == 0); break;
+      case DCR: zero_flag = (--register_B == 0); break;
       case CMP: zero_flag = ((register_A - read_byte()) == 0); break;
       case JMP: if (zero_flag) program_counter = read_word(); else read_word(); break;
       case IN: while ((register_A = myKeypad.getKey()) == NO_KEY); break;
@@ -342,7 +358,18 @@ void execute() {
 // get user keypress
 char getch() {
   char key;
-  while ((key = myKeypad.getKey()) == NO_KEY);
+  while ((key = myKeypad.getKey()) == NO_KEY) {
+    // use LCD Shield buttons as commands shortcuts
+    #ifdef CMK_HARDWARE
+      int shield_input;
+      shield_input = analogRead (0);
+      if (shield_input < 60) command_save();          // button right
+      else if (shield_input < 200) command_view();    // button up
+      else if (shield_input < 400) command_clear();   // button down
+      else if (shield_input < 600) command_load();    // button left
+      else if (shield_input < 800) command_run();     // button select
+    #endif
+  }
   return key;
 }
 
@@ -358,6 +385,95 @@ void init_computer() {
   lcd.setCursor(0, 2);
   reset_cpu();
   reset_memory();
+}
+
+// run program
+void command_run() {
+  lcd.clear();
+  lcd.print("RUN  ");
+  lcd.setCursor(3, 2);
+  delay(200);
+  lcd.clear();
+  execute();
+}
+
+// view memory dump
+void command_view() {
+  lcd.clear();
+  lcd.print("VIEW: ");
+  memory_dump(encode_word());
+}
+
+// load program
+void command_load() {
+  lcd.clear();
+  lcd.print("LOAD ");
+  delay(200);
+  lcd.clear();
+  lcd.print(" Waiting for");
+  lcd.setCursor(0, 2);
+  lcd.print("incoming data...");
+  while (Serial.available() == 0);
+  lcd.clear();
+  lcd.print("Loading...");
+  Serial.readBytes(memory, MEMORY_SIZE);
+  
+  // ascii to bytes       
+  for (int i = 0; i < 100; i++) {
+    memory[i] = ascii_to_hex(memory[i]);
+    if ((i % 2) == 0) memory[i] <<= 4;
+    else {
+      memory[i - 1] |= memory[i];
+      memory[i] = 0;
+    }
+  }
+  
+  // group bytes
+  for (int i = 0; i < 100; i++) {
+    if ((i % 2) == 0) {
+      if (i) {
+        memory[i - ((int)(i / 2))] = memory[i];
+        memory[i] = 0;
+      }
+    }
+  }
+
+  lcd.print("  done"); delay(1000);
+  lcd.setCursor(0, 2);
+}
+
+// save program
+void command_save() {
+  lcd.clear();
+  lcd.print("SAVE ");
+  delay(200);
+  lcd.clear();
+  lcd.print("Saving...");
+  
+  for (int i = 0; i < MEMORY_SIZE; i++) {
+    if ( memory[i] < 0x10) Serial.print("0");
+    Serial.print(memory[i], HEX);
+  }
+  
+  lcd.print("   done");
+  lcd.setCursor(0, 2);
+}
+
+// clear screen
+void command_clear() {
+  lcd.clear();
+  lcd.print("CLEAR");
+  delay(200);
+  lcd.clear();
+}
+
+// software reset
+void command_new() {
+  lcd.clear();
+  lcd.print("NEW  ");
+  lcd.setCursor(3, 2);
+  delay(200);
+  init_computer();
 }
 
 // arduino setup
@@ -391,98 +507,14 @@ void loop() {
 
     // handle user commands
     switch (addr) {
-      // clear LCD display
-      case CLEAR:
-        lcd.clear();
-        lcd.print("CLEAR");
-        delay(200);
-        lcd.clear();
-        break;
+      case CLEAR: command_clear(); break;      // clear LCD
+      case NEW: command_new(); break;          // software reset
+      case VIEW: command_view(); break;        // view memory dump
+      case LOAD: command_load(); break;        // load program via serial port
+      case SAVE: command_save(); break;        // save program via serial port
+      case RUN: command_run(); break;
       
-      // reset computer
-      case NEW:
-        lcd.clear();
-        lcd.print("NEW  ");
-        lcd.setCursor(3, 2);
-        delay(200);
-        init_computer();
-        break;
-      
-      // print memory dump
-      case VIEW:
-        lcd.clear();
-        lcd.print("VIEW: ");
-        memory_dump(encode_word());
-        break;
-      
-      // read program bytes from serial port
-      case LOAD:
-        lcd.clear();
-        lcd.print("LOAD ");
-        delay(200);
-        lcd.clear();
-        lcd.print(" Waiting for");
-        lcd.setCursor(0, 2);
-        lcd.print("incoming data...");
-        while (Serial.available() == 0);
-        lcd.clear();
-        lcd.print("Loading...");
-        Serial.readBytes(memory, MEMORY_SIZE);
-                
-        for (int i = 0; i < 100; i++) {
-          memory[i] = ascii_to_hex(memory[i]);
-          if ((i % 2) == 0) memory[i] <<= 4;
-          else {
-            memory[i - 1] |= memory[i];
-            memory[i] = 0;
-
-            
-            
-          }
-        }
-        
-        for (int i = 0; i < 100; i++) {
-          if ((i % 2) == 0) {
-            if (i) {
-              memory[i - ((int)(i / 2))] = memory[i];
-              memory[i] = 0;
-            }
-          }
-        }
-        
-        
-        lcd.print("  done"); delay(1000);
-        lcd.setCursor(0, 2);
-        break;
-      
-      // write program bytes to serial port
-      case SAVE:
-        lcd.clear();
-        lcd.print("SAVE ");
-        delay(200);
-        lcd.clear();
-        lcd.print("Saving...");
-        
-        for (int i = 0; i < MEMORY_SIZE; i++) {
-          if ( memory[i] < 0x10) Serial.print("0");
-          Serial.print(memory[i], HEX);
-        }
-        
-        lcd.print("   done");
-        lcd.setCursor(0, 2);
-        break;
-      
-      // execute program
-      case RUN:
-        lcd.clear();
-        lcd.print("RUN  ");
-        lcd.setCursor(3, 2);
-        delay(200);
-        lcd.clear();
-        execute();
-        break;
-      
-      // write bytes to memory
+      // enter bytes to memory
       default:
         for (int i = addr; i < addr + 4; i++) {
           memory[i] = encode_byte();
