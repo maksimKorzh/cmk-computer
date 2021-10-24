@@ -46,7 +46,11 @@ opcodes = {
     'SPR': 0x1d,
     'POS': 0x1e,
     'DLY': 0x1f,
-    'RND': 0x20
+    'RND': 0x20,
+    'PSH': 0x21,
+    'POP': 0x22,
+    'SBR': 0x23,
+    'RET': 0x24
 }
 
 # program labels
@@ -73,9 +77,12 @@ with open(filename) as input_file:
             try:
                 if line.strip()[0] == ';': continue
                 byte_count += len(line.split(';')[0].split())
+
                 try:
-                    if len(line.split(';')[0].split()[1]) == 6: byte_count += 1
-                    if line.split(';')[0].split()[1][0].isalpha():
+                    arg = line.split(';')[0].split()[1]
+                    if '0x00' in arg and len(arg) == 6:
+                        byte_count += 1
+                    if arg[0].isalpha():
                         if line.split()[0] in ['LDA', 'STA', 'LPC', 'JMP']:
                             byte_count += 1
                 

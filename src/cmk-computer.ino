@@ -128,7 +128,12 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_c
     ----------------------------------------------------------
     0001 1111  0x1f  DLY  delay execution
     0002 0000  0x20  RND  load random number between 0 and 0xff into A register
-
+    ----------------------------------------------------------
+    0002 0001  0x21  PSH  push register A, then register B to stack
+    0002 0002  0x22  POP  pop register B, then register A from stack
+    0002 0003  0x23  SBR  call subroutine
+    0002 0004  0x24  RET  return from subroutine
+    
  ================================================================
 \****************************************************************/
 
@@ -166,6 +171,10 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_c
 #define POS 0x1e
 #define DLY 0x1f
 #define RND 0x20
+#define PSH 0x21
+#define POP 0x22
+#define SBR 0x23
+#define RET 0x24
 
 // define commands
 #define CLEAR 0xfffa
@@ -185,6 +194,7 @@ uint8_t  memory[MEMORY_SIZE];
 uint8_t  register_A = 0;
 uint8_t  register_B = 0;
 uint16_t  program_counter = 0;
+uint16_t stack_pointer = 0x3ff;
 bool zero_flag = 0;
 
 
@@ -266,7 +276,7 @@ void memory_dump(uint16_t addr) {
   lcd.clear();
   print_word(addr); lcd.print(':');
   for (uint16_t i = addr; i < addr + 4; i++) print_byte(memory[i]);
-  lcd.setCursor(0, 2);
+  lcd.setCursor(0, 1);
 }
 
 
@@ -283,6 +293,7 @@ void reset_cpu() {
   register_A = 0;
   register_B = 0;
   program_counter = 0;
+  stack_pointer = 0x3ff;
   zero_flag = 0;
 }
 
@@ -298,9 +309,9 @@ void execute() {
       case LDI: zero_flag = ((register_A = read_byte()) == 0); break;
       case LDA: zero_flag = ((register_A = memory[(read_word() + register_B)]) == 0); break;
       case TAB: zero_flag = ((register_B = register_A) == 0); break;
-      case ADD: zero_flag = ((register_A += register_B) == 0); break;
-      case SUB: zero_flag = ((register_A -= register_B) == 0); break;
-      case STA: memory[read_word()] = register_A; break;
+      case ADD: zero_flag = ((register_A += read_byte()) == 0); break;
+      case SUB: zero_flag = ((register_A -= read_byte()) == 0); break;
+      case STA: memory[read_word() + register_B] = register_A; break;
       case SPC: memory[read_word()] = program_counter; break;
       case LPC: program_counter = read_word(); break;
       case INC: zero_flag = (++register_B == 0); break;
@@ -324,11 +335,23 @@ void execute() {
       case POS: lcd.setCursor(register_A, register_B); break;
       case DLY: delay(read_byte()); break;
       case RND: zero_flag = (register_A = random(0xff)); break;
+      case PSH:
+        memory[stack_pointer] = register_A;
+        stack_pointer--;
+        memory[stack_pointer] = register_B;
+        stack_pointer--;
+        break;
+      case POP:
+        stack_pointer++;
+        register_B = memory[stack_pointer];
+        stack_pointer++;
+        register_A = memory[stack_pointer];
+        break;
       case UDG:
         lcd.createChar(register_A, memory + register_B);
         lcd.begin(16, 2);
         break;
-      case SPR: lcd.write(byte(register_A)); break;
+      case SPR: lcd.write(byte(read_byte())); break;
       case DBG:
         Serial.print("Register A: ");
         Serial.println(register_A, HEX);
@@ -336,13 +359,15 @@ void execute() {
         Serial.println(register_B, HEX);
         Serial.print("Program Counter: ");
         Serial.println(program_counter, HEX);
+        Serial.print("Stack pointer:");
+        Serial.println(stack_pointer);
         Serial.print("Zero Flag: ");
         Serial.println(zero_flag, HEX);
         break;
       default:
         lcd.clear();
         lcd.print("Unknown opcode:");
-        lcd.setCursor(0, 2);
+        lcd.setCursor(0, 1);
         print_byte(opcode);
         lcd.print("? ");
         return;
@@ -386,7 +411,7 @@ uint8_t ascii_to_hex(char ascii) {
 void init_computer() {
   lcd.clear();
   lcd.print("Code Monkey King");
-  lcd.setCursor(0, 2);
+  lcd.setCursor(0, 1);
   reset_cpu();
   reset_memory();
 }
@@ -415,7 +440,7 @@ void command_load() {
   delay(300);
   lcd.clear();
   lcd.print(" Waiting for");
-  lcd.setCursor(0, 2);
+  lcd.setCursor(0, 1);
   lcd.print("incoming data...");
   while (Serial.available() == 0);
   lcd.clear();
@@ -443,7 +468,7 @@ void command_load() {
   }
 
   lcd.print("  done"); delay(1000);
-  lcd.setCursor(0, 2);
+  lcd.setCursor(0, 1);
 }
 
 // save program
@@ -460,7 +485,7 @@ void command_save() {
   }
   
   lcd.print("   done");
-  lcd.setCursor(0, 2);
+  lcd.setCursor(0, 1);
 }
 
 // clear screen
