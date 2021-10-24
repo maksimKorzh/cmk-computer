@@ -45,7 +45,8 @@ opcodes = {
     'UDG': 0x1c,
     'SPR': 0x1d,
     'POS': 0x1e,
-    'DLY': 0x1f
+    'DLY': 0x1f,
+    'RND': 0x20
 }
 
 # program labels
@@ -82,10 +83,10 @@ with open(filename) as input_file:
                     pass
                 
                 if ':' in line:
-                    labels[line[:-1]] = f'{byte_count:#0{6}x}'
+                    labels[line.split(';')[0].strip()[:-1]] = f'{byte_count:#0{6}x}'
                     byte_count -= 1
                 
-                if 'BYTE' in line or 'WORD' in line: byte_count -= 1
+                if 'BYTE' in line.split(';')[0] or 'WORD' in line.split(';')[0]: byte_count -= 1
                 
             except IndexError:
                 pass
@@ -104,8 +105,10 @@ with open(filename) as input_file:
                         print('Unknown opcode:', opcode);
                         sys.exit(1)
                   
-                arg = line.split()[1]                
-                if ('0x00') in arg and len(arg) == 6: program.append(0);
+                arg = line.split(';')[0].split()[1]
+                
+                if ('0X00') in arg and len(arg) == 6:
+                    program.append(0);
                 
                 try:
                     if arg[0] == "'" and arg[-1] == "'": print(arg[1])
@@ -117,10 +120,9 @@ with open(filename) as input_file:
                             if opcode in ['LDA', 'STA', 'LPC', 'JMP']:
                                 program.append(0);
                         
-                        value = int(labels[arg], 16)
-                        
-                    
-                    except:
+                        value = int(labels[arg.split(';')[0].strip()], 16)
+
+                    except Exception as e:
                         print('Label "' + arg + '" doesn\'t exist!');
                         sys.exit(1)
 

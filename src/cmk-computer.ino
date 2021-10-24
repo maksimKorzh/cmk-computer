@@ -127,6 +127,8 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_c
     0001 1110  0x1e  POS  set cursor at position (register A = column, register B = row)
     ----------------------------------------------------------
     0001 1111  0x1f  DLY  delay execution
+    0002 0000  0x20  RND  load random number between 0 and 0xff into A register
+
  ================================================================
 \****************************************************************/
 
@@ -163,6 +165,7 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_c
 #define SPR 0x1d
 #define POS 0x1e
 #define DLY 0x1f
+#define RND 0x20
 
 // define commands
 #define CLEAR 0xfffa
@@ -227,7 +230,7 @@ uint16_t encode_word() {
     lcd.print(hex, HEX);
     
   }
-  delay(180);
+  delay(200);
   return addr;
 }
 
@@ -320,6 +323,7 @@ void execute() {
       case NCR: lcd.noBlink(); break;
       case POS: lcd.setCursor(register_A, register_B); break;
       case DLY: delay(read_byte()); break;
+      case RND: zero_flag = (register_A = random(0xff)); break;
       case UDG:
         lcd.createChar(register_A, memory + register_B);
         lcd.begin(16, 2);
@@ -392,7 +396,7 @@ void command_run() {
   lcd.clear();
   lcd.print("RUN  ");
   lcd.setCursor(3, 2);
-  delay(200);
+  delay(300);
   lcd.clear();
   execute();
 }
@@ -408,7 +412,7 @@ void command_view() {
 void command_load() {
   lcd.clear();
   lcd.print("LOAD ");
-  delay(200);
+  delay(300);
   lcd.clear();
   lcd.print(" Waiting for");
   lcd.setCursor(0, 2);
@@ -446,7 +450,7 @@ void command_load() {
 void command_save() {
   lcd.clear();
   lcd.print("SAVE ");
-  delay(200);
+  delay(300);
   lcd.clear();
   lcd.print("Saving...");
   
@@ -463,7 +467,7 @@ void command_save() {
 void command_clear() {
   lcd.clear();
   lcd.print("CLEAR");
-  delay(200);
+  delay(300);
   lcd.clear();
 }
 
@@ -472,7 +476,7 @@ void command_new() {
   lcd.clear();
   lcd.print("NEW  ");
   lcd.setCursor(3, 2);
-  delay(200);
+  delay(300);
   init_computer();
 }
 
