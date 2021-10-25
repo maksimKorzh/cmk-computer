@@ -98,7 +98,7 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_c
     0000 0100  0x04  ADD  add A and B, store result to A register
     0000 0101  0x05  SUB  subtract B from A, store result to A register
     0000 0110  0x06  STA  set value from A register to memory
-    0000 0111  0x07  SPC  save program counter to memory
+    UNUSED (0000 0111  0x07  SPC  save program counter to memory)
     0000 1000  0x08  LPC  load data from memory to program counter
     0000 1001  0x09  INC  increment value in register B
     0000 1010  0x0a  DCR  decrement value in register B
@@ -145,7 +145,7 @@ Keypad myKeypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_c
 #define ADD 0x04
 #define SUB 0x05
 #define STA 0x06
-#define SPC 0x07
+//#define SPC 0x07
 #define LPC 0x08
 #define INC 0x09
 #define DCR 0x0a
@@ -312,7 +312,7 @@ void execute() {
       case ADD: zero_flag = ((register_A += read_byte()) == 0); break;
       case SUB: zero_flag = ((register_A -= read_byte()) == 0); break;
       case STA: memory[read_word() + register_B] = register_A; break;
-      case SPC: memory[read_word()] = program_counter; break;
+      //case SPC: memory[read_word()] = program_counter; break;
       case LPC: program_counter = read_word(); break;
       case INC: zero_flag = (++register_B == 0); break;
       case DCR: zero_flag = (--register_B == 0); break;
@@ -336,16 +336,22 @@ void execute() {
       case DLY: delay(read_byte()); break;
       case RND: zero_flag = (register_A = random(0xff)); break;
       case PSH:
-        memory[stack_pointer] = register_A;
-        stack_pointer--;
-        memory[stack_pointer] = register_B;
-        stack_pointer--;
+        memory[stack_pointer--] = register_A;
+        memory[stack_pointer--] = register_B;
         break;
       case POP:
-        stack_pointer++;
-        register_B = memory[stack_pointer];
-        stack_pointer++;
-        register_A = memory[stack_pointer];
+        register_B = memory[++stack_pointer];
+        register_A = memory[++stack_pointer];
+        break;
+      case SBR:
+        memory[stack_pointer--] = (uint8_t)(program_counter & 0x00ff) + 2;
+        memory[stack_pointer--] = (uint8_t)(program_counter >> 4);
+        program_counter = read_word();
+        break;
+      case RET:
+        program_counter = 0;
+        program_counter <<= memory[++stack_pointer];
+        program_counter |= memory[++stack_pointer];
         break;
       case UDG:
         lcd.createChar(register_A, memory + register_B);
@@ -360,7 +366,7 @@ void execute() {
         Serial.print("Program Counter: ");
         Serial.println(program_counter, HEX);
         Serial.print("Stack pointer:");
-        Serial.println(stack_pointer);
+        Serial.println(stack_pointer, HEX);
         Serial.print("Zero Flag: ");
         Serial.println(zero_flag, HEX);
         break;

@@ -1,20 +1,4 @@
-start:         ; program start
-  
-  ldi 0x12
-  tab
-  ldi 0x67
-  psh
-  dbg
-  
-  ldi 0x00
-  tab
-  ldi 0x00
-  dbg
-  
-  pop
-  dbg
-  lpc exit
-  
+start:        ; program start  
   ldi dino_a
   tab
   ldi 0x00
@@ -26,17 +10,18 @@ start:         ; program start
   udg
 
 run:  
-  ldi 0x01
-  tab
-  ldi 0x01
-  pos
+  sbr position_dino
   spr 0x00
-  ldi 0x01
-  tab
-  ldi 0x01
-  pos
+  sbr position_dino
   spr 0x01
   lpc run
+
+position_dino:
+  ldi 0x01
+  tab
+  ldi 0x01
+  pos
+  ret
 
 dino_a:
   byte 0x07    ; 00000111

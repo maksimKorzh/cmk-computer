@@ -83,13 +83,17 @@ with open(filename) as input_file:
                     if '0x00' in arg and len(arg) == 6:
                         byte_count += 1
                     if arg[0].isalpha():
-                        if line.split()[0] in ['LDA', 'STA', 'LPC', 'JMP']:
+                        if line.split()[0] in ['LDA', 'STA', 'LPC', 'JMP', 'SBR']:
                             byte_count += 1
                 
                 except:
                     pass
                 
                 if ':' in line:
+                    if not line.split(';')[0].split(':')[1].strip() == '':
+                        print('Instruction can\'t share the same line with label!')
+                        sys.exit(1)
+
                     labels[line.split(';')[0].strip()[:-1]] = f'{byte_count:#0{6}x}'
                     byte_count -= 1
                 
@@ -124,7 +128,7 @@ with open(filename) as input_file:
                 except:
                     try:
                         if ('0x00') in labels[arg] and len(labels[arg]) == 6:
-                            if opcode in ['LDA', 'STA', 'LPC', 'JMP']:
+                            if opcode in ['LDA', 'STA', 'LPC', 'JMP', 'SBR']:
                                 program.append(0);
                         
                         value = int(labels[arg.split(';')[0].strip()], 16)
