@@ -148,15 +148,15 @@ with open(filename) as input_file:
                 pass
 
 if (len(program) > 1024):
-    print('Your program exceeds CMK computer RAM by', len(program) - 1024, 'bytes!');
+    print('Your program exceeds limit by', len(program) - 1024, 'bytes!');
     sys.exit();
 
 print('\nYOUR PROGRAM LABELS:')
 print(json.dumps(labels, indent=2))
-print('\nYOUR PROGRAM LENGTH:')
-print(len(program), 'bytes')
 print('\nYOUR PROGRAM BYTES:');
 print(' '.join([f'{i:#0{4}x}' for i in  program]).replace('0x', '').replace(' ', '').upper())
+print('\nYOUR PROGRAM LENGTH:')
+print(len(program), 'bytes')
 print('\n1. Type "FFFD" on CMK computer to load the program');
 print('2. Open Arduino IDE => Serial Monitor')
 print('3. Copy and paste above bytes to Arduino Serial Monitor ans click "send"');

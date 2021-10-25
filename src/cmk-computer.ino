@@ -39,7 +39,7 @@
 \****************************************************************/
 
 // uncomment to rotate keypad CCW, enable LCD shield buttons
-//#define CMK_HARDWARE
+#define CMK_HARDWARE
 
 // LCD pins
 #define RS 8    // LCD reset pin
@@ -299,6 +299,17 @@ void reset_cpu() {
 
 // execute instruction
 void execute() {
+  
+  /*lcd.createChar(0, memory + 0x0a);
+  lcd.begin(16, 2);
+  lcd.createChar(1, memory + 0x12);
+  lcd.begin(16, 2);
+  lcd.createChar(2, memory + 0x1a);
+  lcd.begin(16, 2);
+  lcd.createChar(3, memory + 0x22);
+  lcd.begin(16, 2);
+  */
+
   while (true) {
     // read next opcode
     uint8_t opcode = read_byte();    
@@ -320,13 +331,13 @@ void execute() {
       case JMP: if (zero_flag) program_counter = read_word(); else read_word(); break;
       case IN: while ((register_A = myKeypad.getKey()) == NO_KEY); break;
       case OUT: lcd.print(char(register_A)); break;
-      case BIT: zero_flag = ((register_A & register_B) == 0); break;
-      case AND: zero_flag = ((register_A &= register_B) == 0); break;
-      case OR: zero_flag = ((register_A |= register_B) == 0); break;
-      case XOR: zero_flag = ((register_A ^= register_B) == 0); break;
-      case NOT: zero_flag = ((register_A = ~register_A) == 0); break;
-      case SHL: zero_flag = ((register_A <<= register_B) == 0); break;
-      case SHR: zero_flag = ((register_A >>= register_B) == 0); break;
+      case BIT: zero_flag = ((register_A & read_byte()) == 0); break;
+      case AND: zero_flag = ((register_A &= read_byte()) == 0); break;
+      case OR: zero_flag = ((register_A |= read_byte()) == 0); break;
+      case XOR: zero_flag = ((register_A ^= read_byte()) == 0); break;
+      case NOT: zero_flag = ((register_A = ~read_byte()) == 0); break;
+      case SHL: zero_flag = ((register_A <<= read_byte()) == 0); break;
+      case SHR: zero_flag = ((register_A >>= read_byte()) == 0); break;
       case CLS: lcd.clear(); break;
       case SDL: lcd.scrollDisplayLeft(); break;
       case SDR: lcd.scrollDisplayRight(); break;
@@ -454,7 +465,7 @@ void command_load() {
   Serial.readBytes(memory, MEMORY_SIZE);
   
   // ascii to bytes       
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < MEMORY_SIZE; i++) {
     memory[i] = ascii_to_hex(memory[i]);
     if ((i % 2) == 0) memory[i] <<= 4;
     else {
@@ -464,7 +475,7 @@ void command_load() {
   }
   
   // group bytes
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < MEMORY_SIZE; i++) {
     if ((i % 2) == 0) {
       if (i) {
         memory[i - ((int)(i / 2))] = memory[i];
@@ -473,7 +484,7 @@ void command_load() {
     }
   }
 
-  lcd.print("  done"); delay(1000);
+  lcd.print("  done");
   lcd.setCursor(0, 1);
 }
 
