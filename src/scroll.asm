@@ -9,8 +9,9 @@ start:         ; program start
 loop:          ; program loop
   add 0x01     ; increment A register by one
   out          ; print character to LCD
-  sdl
-  dly 0xff
+  sdl          ; scroll display left
+  dly 0xff     ; wait 255 ms
+  dly 0xff     ; wait 255 ms
   lpc loop     ; print next character
 
 exit:
