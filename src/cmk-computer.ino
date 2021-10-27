@@ -14,29 +14,48 @@
 #include <LiquidCrystal.h>
 #include <Keypad.h>
 
-
 /****************************************************************\
- ================================================================
-                              CIRCUIT
- ================================================================
- 
-  initialize the library with the numbers of the interface pins
-
-                    LCD RS pin to digital pin 12
-                    LCD Enable pin to digital pin 11
-                    LCD D4 pin to digital pin 5
-                    LCD D5 pin to digital pin 4
-                    LCD D6 pin to digital pin 3
-                    LCD D7 pin to digital pin 2
-                    LCD R/W pin to ground
-                    LCD VSS pin to ground
-                    LCD VCC pin to 5V
-                    10K resistor:
-                    ends to +5V and ground
-                    wiper to LCD VO pin (pin 3)
-
- ================================================================
-\****************************************************************/
+   ================================================================
+                      CIRCUIT (Tinkercad version)
+   ================================================================
+                LCD RS pin to arduino digital pin 12
+                LCD Enable pin to arduino digital pin 11
+                LCD D4 pin to arduino digital pin 5
+                LCD D5 pin to arduino digital pin 4
+                LCD D6 pin to arduino digital pin 3
+                LCD D7 pin to arduino digital pin 2
+                LCD R/W pin to arduino ground
+                LCD VSS pin to arduino ground
+                LCD VCC pin to arduino 5V
+                PUSH BUTTON terminal 1a to arduino pin 7
+                PUSH BUTTON terminal 2a to ground
+    
+   ================================================================
+            CIRCUIT (LCD shield 1602A D1 ROBOT (DF ROBOT))
+   ================================================================
+                LCD RS pin to arduino digital pin 8
+                LCD Enable pin to arduino digital pin 9
+                LCD Backlight LED to arduino pin 10
+                LCD D4 pin to arduino digital pin 4
+                LCD D5 pin to arduino digital pin 5
+                LCD D6 pin to arduino digital pin 6
+                LCD D7 pin to arduino digital pin 7
+                LCD A0  to arduino A0 pin (LCD shield keypad) 
+                LCD VIN to arduino VIN pin
+                LCD GND to arduino GND pin
+                LCD 5V to arduino 5V pin
+                LCD RST to arduino RST pin
+                KEYPAD row 1 to arduino digital pin 12
+                KEYPAD row 2 to arduino digital pin 11
+                KEYPAD row 3 to arduino digital pin 3
+                KEYPAD row 4 to arduino digital pin 2
+                KEYPAD col 1 to arduino analog pin 4
+                KEYPAD col 2 to arduino analog pin 3
+                KEYPAD col 3 to arduino analog pin 2
+                KEYPAD col 4 to arduino analog pin 1
+                
+   ================================================================
+  \****************************************************************/
 
 // uncomment to rotate keypad CCW, enable LCD shield buttons
 #define CMK_HARDWARE
