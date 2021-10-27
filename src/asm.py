@@ -75,6 +75,14 @@ with open(filename) as input_file:
     for line in src:
         if line != '':
             try:
+                if ':' in line.split(';')[1]:
+                    print('":" is not allowed in comments!')
+                    sys.exit(1)
+            
+            except Exception as e:
+                pass
+
+            try:
                 if line.strip()[0] == ';': continue
                 byte_count += len(line.split(';')[0].split())
 
@@ -94,6 +102,10 @@ with open(filename) as input_file:
                         print('Instruction can\'t share the same line with label!')
                         sys.exit(1)
 
+                    if 'BYTE' in line.split(';')[0].strip()[:-1] or 'WORD' in line.split(';')[0].strip()[:-1]:
+                        print('"byte" and "word" are reserved keywords and can\'t be the part of a label!');
+                        sys.exit(1)
+                        
                     labels[line.split(';')[0].strip()[:-1]] = f'{byte_count:#0{6}x}'
                     byte_count -= 1
                 

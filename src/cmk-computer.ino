@@ -364,7 +364,7 @@ void execute() {
       case NCR: lcd.noBlink(); break;
       case POS: lcd.setCursor(register_A, register_B); break;
       case DLY: delay(read_byte()); break;
-      case RND: zero_flag = (register_A = random(0xff)); break;
+      case RND: zero_flag = (register_A = random(read_byte())); break;
       case PSH:
         memory[stack_pointer--] = register_A;
         memory[stack_pointer--] = register_B;
