@@ -9,12 +9,12 @@ start:                 ; program start
   ldi 0x01
   udg
 
-  ldi cactus_1
+  ldi cactus_big
   tab
   ldi 0x02
   udg
   
-  ldi cactus_2
+  ldi cactus_small
   tab
   ldi 0x04
   udg
@@ -32,7 +32,7 @@ print_loop:            ; print world loop
   jmp next_line        ; if so it's time to update cursor position
 
 load_next_char:        ; print next char in game world array
-  lda game_world       ; load byte at 'hello' label address + B register offset
+  lda world_row_1 ; load byte at 'hello' label address + B register offset
   cmp 0xfe             ; terminating character?
   jmp update_return    ; if so then exit the program
   out                  ; print character to LCD display
@@ -55,28 +55,48 @@ update_return:         ; all done
   ret                  ; return from procedure
 
 scroll_world:          ; infinite scroll game world
-  
-  
-  ldi 0x00
-  tab
+  ldi 0x00             ; load 0x00 to A register
+  tab                  ; reset B register offset
   rnd 0x20             ; generate random number in range from 0x00 to 0x20
   and 0x06             ; mask for cactus and empty square (0010 0110 => 0x26)
-  jmp empty_square
-  cmp 0x06
-  jmp empty_square
+  jmp empty_square     ; on 0x00 (dino char) set empty square
+  cmp 0x06             ; mask cactus
+  jmp empty_square     ; on 0x06 (undefined char) set empty square
 
-set_object:
-  sta random_object
+set_object:            ; random source set
+  ldi 0x02 ; temp
+  sta random_object    ; set object (cactus_small/cactus_big/empty square)
+  ldi 0x00             ; load 0x00 A register 
+  tab                  ; and transfer it to B register to init the offset
+  
+scroll_loop:           ; loop over bytes in game world row 2
+  lda world_row_2      ; load address of world_row_2 to A register
+  cmp 0x02
+  jmp scroll_object
+  cmp 0x03
+  jmp scroll_object
 
-scroll_return:         ; all done
-  ret                  ; return from procedure
+scroll_loop_end:
+  cmp 0xfe             ; end of row?
+  jmp scroll_return    ; all done
+  inc
+  lpc scroll_loop      ; scroll next byte
 
 empty_square:
   ldi 0x20             ; make sure it's not a dino)
   lpc set_object
 
+scroll_object:
+  psh
+  ; scroll logic here...
+  
+  pop
+  lpc scroll_loop_end
 
-game_world:
+scroll_return:         ; all done
+  ret                  ; return from procedure
+
+world_row_1:
   byte 0x20
   byte 0x20
   byte 0x20
@@ -93,6 +113,8 @@ game_world:
   byte 0x20
   byte 0x20
   byte 0x20
+
+world_row_2:
   byte 0x20
   byte 0x00
   byte 0x20
@@ -107,9 +129,9 @@ game_world:
   byte 0x20
   byte 0x20
   byte 0x20
-  byte 0x20
 
-random_object:  
+random_object:
+  byte 0x20
   byte 0x20
   byte 0xfe
 
@@ -133,7 +155,7 @@ dino_r:
   byte 0x0e             ; 00001110
   byte 0x02             ; 00000010
 
-cactus_1:
+cactus_big:
   byte 0x00             ; 00000000
   byte 0x04             ; 00000100
   byte 0x05             ; 00000101
@@ -143,7 +165,7 @@ cactus_1:
   byte 0x04             ; 00000100
   byte 0x04             ; 00000100
 
-cactus_2:
+cactus_small:
   byte 0x00             ; 00000000
   byte 0x00             ; 00000000
   byte 0x04             ; 00000100
@@ -154,4 +176,9 @@ cactus_2:
   byte 0x04             ; 00000100
 
 exit:
+  crs
+  ldi 0x01
+  tab
+  ldi 0x00
+  pos
   byte 0x00

@@ -318,17 +318,6 @@ void reset_cpu() {
 
 // execute instruction
 void execute() {
-  
-  /*lcd.createChar(0, memory + 0x0a);
-  lcd.begin(16, 2);
-  lcd.createChar(1, memory + 0x12);
-  lcd.begin(16, 2);
-  lcd.createChar(2, memory + 0x1a);
-  lcd.begin(16, 2);
-  lcd.createChar(3, memory + 0x22);
-  lcd.begin(16, 2);
-  */
-
   while (true) {
     // read next opcode
     uint8_t opcode = read_byte();    
@@ -428,13 +417,14 @@ char getch() {
     #ifdef CMK_HARDWARE
       int shield_input;
       shield_input = analogRead (0);
-      if (shield_input < 60) command_save();          // button right
-      else if (shield_input < 200) command_view();    // button up
-      else if (shield_input < 400) command_clear();   // button down
-      else if (shield_input < 600) command_load();    // button left
-      else if (shield_input < 800) command_run();     // button select
+      if (shield_input < 60) { delay(300); command_save(); }          // button right
+      else if (shield_input < 200) { delay(300); command_view(); }   // button up
+      else if (shield_input < 400) { delay(300); command_clear(); }   // button down
+      else if (shield_input < 600) { delay(300); command_load(); }    // button left
+      else if (shield_input < 800) { delay(300); command_run(); }    // button select
     #endif
   }
+  Serial.println(key, HEX);
   return key;
 }
 
