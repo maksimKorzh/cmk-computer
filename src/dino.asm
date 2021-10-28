@@ -1,4 +1,89 @@
-start:                 ; program start
+start:                  ; for programs bigger than around 200 bytes
+  lpc init              ; make sure to store data in the beginning of the file
+                        ; and then jump to program start for otherwise
+                        ; local variable addresses may exceed 0xff resulting
+                        ; in undefined behavior
+
+world_row_1:
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x53
+  byte 0x63
+  byte 0x6f
+  byte 0x72
+  byte 0x65
+  byte 0x3a
+  byte 0x20
+  byte 0x20
+  byte 0x20
+
+world_row_2:
+  byte 0x20
+  byte 0x00
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+  byte 0x20
+
+random_object:
+  byte 0x20
+  byte 0xfe
+
+dino_l:
+  byte 0x07             ; 00000111
+  byte 0x05             ; 00000101
+  byte 0x07             ; 00000111
+  byte 0x16             ; 00010110
+  byte 0x1f             ; 00011111
+  byte 0x1e             ; 00011110
+  byte 0x0e             ; 00001110
+  byte 0x04             ; 00000100
+
+dino_r:
+  byte 0x07             ; 00000111
+  byte 0x05             ; 00000101
+  byte 0x07             ; 00000111
+  byte 0x16             ; 00010110
+  byte 0x1f             ; 00011111
+  byte 0x1e             ; 00011110
+  byte 0x0e             ; 00001110
+  byte 0x02             ; 00000010
+
+cactus_big:
+  byte 0x00             ; 00000000
+  byte 0x04             ; 00000100
+  byte 0x05             ; 00000101
+  byte 0x15             ; 00010101
+  byte 0x16             ; 00010110
+  byte 0x0c             ; 00001100
+  byte 0x04             ; 00000100
+  byte 0x04             ; 00000100
+
+cactus_small:
+  byte 0x00             ; 00000000
+  byte 0x00             ; 00000000
+  byte 0x04             ; 00000100
+  byte 0x05             ; 00000101
+  byte 0x15             ; 00010101
+  byte 0x16             ; 00010110
+  byte 0x0c             ; 00001100
+  byte 0x04             ; 00000100
+
+init:                 ; program start
   ldi dino_l
   tab
   ldi 0x00
@@ -26,7 +111,7 @@ get_ready:
   lpc get_ready
 
 game_loop:  
-  ;dbg
+  out
   ldi 0x61
   ldi 0x61
   ldi 0x61
@@ -145,85 +230,6 @@ scroll_object:
 
 scroll_return:         ; all done
   ret                  ; return from procedure
-
-world_row_1:
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x53
-  byte 0x63
-  byte 0x6f
-  byte 0x72
-  byte 0x65
-  byte 0x3a
-  byte 0x20
-  byte 0x20
-  byte 0x20
-
-world_row_2:
-  byte 0x20
-  byte 0x00
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-  byte 0x20
-
-random_object:
-  byte 0x20
-  byte 0xfe
-
-dino_l:
-  byte 0x07             ; 00000111
-  byte 0x05             ; 00000101
-  byte 0x07             ; 00000111
-  byte 0x16             ; 00010110
-  byte 0x1f             ; 00011111
-  byte 0x1e             ; 00011110
-  byte 0x0e             ; 00001110
-  byte 0x04             ; 00000100
-
-dino_r:
-  byte 0x07             ; 00000111
-  byte 0x05             ; 00000101
-  byte 0x07             ; 00000111
-  byte 0x16             ; 00010110
-  byte 0x1f             ; 00011111
-  byte 0x1e             ; 00011110
-  byte 0x0e             ; 00001110
-  byte 0x02             ; 00000010
-
-cactus_big:
-  byte 0x00             ; 00000000
-  byte 0x04             ; 00000100
-  byte 0x05             ; 00000101
-  byte 0x15             ; 00010101
-  byte 0x16             ; 00010110
-  byte 0x0c             ; 00001100
-  byte 0x04             ; 00000100
-  byte 0x04             ; 00000100
-
-cactus_small:
-  byte 0x00             ; 00000000
-  byte 0x00             ; 00000000
-  byte 0x04             ; 00000100
-  byte 0x05             ; 00000101
-  byte 0x15             ; 00010101
-  byte 0x16             ; 00010110
-  byte 0x0c             ; 00001100
-  byte 0x04             ; 00000100
 
 game_over:
   pop

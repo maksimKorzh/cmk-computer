@@ -143,16 +143,7 @@ with open(filename) as input_file:
                         if ('0x00') in labels[arg] and len(labels[arg]) == 6:
                             if opcode in ['LDA', 'STA', 'LPC', 'JMP', 'SBR']:
                                 program.append(0);
-                                
-                                
-                                print(' '.join([f'{i:#0{4}x}' for i in  program]).replace('0x', '').replace(' ', '').upper())
-                                print(line)
-                                print(program[-2:])
-                                input()
-                                
-                                
-                                
-                        
+
                         value = int(labels[arg.split(';')[0].strip()], 16)
 
                     except Exception as e:
@@ -176,7 +167,17 @@ if (len(program) > 1024):
 print('\nYOUR PROGRAM LABELS:')
 print(json.dumps(labels, indent=2))
 print('\nYOUR PROGRAM BYTES:');
+
+
+
+#for i in range(len(program)):
+#    if program[i] < 0x10: print('0', sep='', end='')
+#    print(hex(program[i]).replace('0x', '').upper() + ' ', end='')
+
 print(' '.join([f'{i:#0{4}x}' for i in  program]).replace('0x', '').replace(' ', '').upper())
+
+
+
 print('\nYOUR PROGRAM LENGTH:')
 print(len(program), 'bytes')
 print('\n1. Type "FFFD" on CMK computer to load the program');
