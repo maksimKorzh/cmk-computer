@@ -21,7 +21,7 @@ opcodes = {
     'ADD': 0x04,
     'SUB': 0x05,
     'STA': 0x06,
-    'SPC': 0x07,
+    'RCH': 0x07,
     'LPC': 0x08,
     'INC': 0x09,
     'DCR': 0x0a,
@@ -132,6 +132,7 @@ with open(filename) as input_file:
                 
                 if ('0X00') in arg and len(arg) == 6:
                     program.append(0);
+                    
                 
                 try:
                     if arg[0] == "'" and arg[-1] == "'": print(arg[1])
@@ -142,6 +143,15 @@ with open(filename) as input_file:
                         if ('0x00') in labels[arg] and len(labels[arg]) == 6:
                             if opcode in ['LDA', 'STA', 'LPC', 'JMP', 'SBR']:
                                 program.append(0);
+                                
+                                
+                                print(' '.join([f'{i:#0{4}x}' for i in  program]).replace('0x', '').replace(' ', '').upper())
+                                print(line)
+                                print(program[-2:])
+                                input()
+                                
+                                
+                                
                         
                         value = int(labels[arg.split(';')[0].strip()], 16)
 

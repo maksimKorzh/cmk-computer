@@ -19,10 +19,34 @@ start:                 ; program start
   ldi 0x04
   udg
 
-game_loop:
+get_ready:
+  rch
+  cmp 0x30
+  jmp game_loop
+  lpc get_ready
+
+game_loop:  
+  ;dbg
+  ldi 0x61
+  ldi 0x61
+  ldi 0x61
+  ldi 0x61
+  ldi 0x61
+  ldi 0x61
+  ldi 0x61
+  ldi 0x61
+  ldi 0x61
+  ldi 0x61
+  ;ldi 0x61
+  
+
+game_continue:
   sbr scroll_world
   sbr update_world
   dly 0xff
+  lpc game_loop
+
+dino_jump:  
   lpc game_loop
 
 update_world:          ; print game world procedure
@@ -105,9 +129,9 @@ scroll_object:
   psh
   lda world_row_2      ; get next cell's content
   cmp 0x00             ; is it a dino_l?
-  jmp exit    ; if so the game is over
+  jmp game_over        ; if so the game is over
   cmp 0x01             ; is it a dino_r
-  jmp exit    ; if so the game is over
+  jmp game_over        ; if so the game is over
   pop
   
   sta world_row_2      ; store big or small cactus on the next cell
@@ -201,12 +225,12 @@ cactus_small:
   byte 0x0c             ; 00001100
   byte 0x04             ; 00000100
 
-exit:
+game_over:
   pop
   pop
   pop
   
-reset_map:             ; needed to play the game again without reloading
+reset_map:              ; needed to play the game again without reloading
   ldi 0x02
   tab
   ldi 0x20
