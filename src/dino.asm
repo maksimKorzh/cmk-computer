@@ -1,4 +1,4 @@
-start:                 ; program start  
+start:                 ; program start
   ldi dino_l
   tab
   ldi 0x00
@@ -34,12 +34,22 @@ print_loop:            ; print world loop
   jmp next_line        ; if so it's time to update cursor position
 
 load_next_char:        ; print next char in game world array
-  lda world_row_1 ; load byte at 'hello' label address + B register offset
+  lda world_row_1      ; load byte at 'hello' label address + B register offset
+  jmp update_dino      ; if encounter a dino_l then swap legs
+  cmp 0x01             ; if encounter a dino_l
+  jmp update_dino      ; then swap legs as well
+
+load_end:
   cmp 0xfe             ; terminating character?
   jmp update_return    ; if so then exit the program
   out                  ; print character to LCD display
   inc                  ; increment B reister by 1
   lpc print_loop       ; jump to 'print' label
+
+update_dino:
+  xor 0x01             ; swap dino legs
+  sta world_row_1
+  lpc load_end         ; continue loop
 
 next_line:             ; handle LCD cursor placement
   psh                  ; preserve A and B registers on stack
@@ -91,6 +101,15 @@ scroll_loop_end:
 scroll_object:
   psh
   dcr                  ; decrement B register, so it points to next cell to scroll cactus to
+  
+  psh
+  lda world_row_2      ; get next cell's content
+  cmp 0x00             ; is it a dino_l?
+  jmp exit    ; if so the game is over
+  cmp 0x01             ; is it a dino_r
+  jmp exit    ; if so the game is over
+  pop
+  
   sta world_row_2      ; store big or small cactus on the next cell
   inc                  ; restore original cactus location cell offset
   inc                  ; point B register to previous cell offset
@@ -183,9 +202,25 @@ cactus_small:
   byte 0x04             ; 00000100
 
 exit:
-  crs
-  ldi 0x01
+  pop
+  pop
+  pop
+  
+reset_map:             ; needed to play the game again without reloading
+  ldi 0x02
   tab
-  ldi 0x00
-  pos
+  ldi 0x20
+
+reset_loop:
+  psh
+  lda world_row_2
+  cmp 0xfe
+  jmp reset_end
+  pop
+  sta world_row_2
+  inc
+  lpc reset_loop
+
+reset_end:
+  pop
   byte 0x00

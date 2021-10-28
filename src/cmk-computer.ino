@@ -424,7 +424,7 @@ char getch() {
       else if (shield_input < 800) { delay(300); command_run(); }    // button select
     #endif
   }
-  Serial.println(key, HEX);
+
   return key;
 }
 
