@@ -19,9 +19,11 @@ start:                 ; program start
   ldi 0x04
   udg
 
+game_loop:
   sbr scroll_world
   sbr update_world
-  lpc exit
+  dly 0xff
+  lpc game_loop
 
 update_world:          ; print game world procedure
   ldi 0x00             ; load 0 to A register
@@ -58,22 +60,26 @@ scroll_world:          ; infinite scroll game world
   ldi 0x00             ; load 0x00 to A register
   tab                  ; reset B register offset
   rnd 0x20             ; generate random number in range from 0x00 to 0x20
-  and 0x06             ; mask for cactus and empty square (0010 0110 => 0x26)
-  jmp empty_square     ; on 0x00 (dino char) set empty square
-  cmp 0x06             ; mask cactus
-  jmp empty_square     ; on 0x06 (undefined char) set empty square
+
+  cmp 0x02
+  jmp set_object
+  cmp 0x04
+  jmp set_object
+  
+  ldi 0x20
+  
 
 set_object:            ; random source set
-  ldi 0x02 ; temp
   sta random_object    ; set object (cactus_small/cactus_big/empty square)
   ldi 0x00             ; load 0x00 A register 
   tab                  ; and transfer it to B register to init the offset
+  
   
 scroll_loop:           ; loop over bytes in game world row 2
   lda world_row_2      ; load address of world_row_2 to A register
   cmp 0x02
   jmp scroll_object
-  cmp 0x03
+  cmp 0x04
   jmp scroll_object
 
 scroll_loop_end:
@@ -82,14 +88,15 @@ scroll_loop_end:
   inc
   lpc scroll_loop      ; scroll next byte
 
-empty_square:
-  ldi 0x20             ; make sure it's not a dino)
-  lpc set_object
-
 scroll_object:
   psh
-  ; scroll logic here...
-  
+  dcr                  ; decrement B register, so it points to next cell to scroll cactus to
+  sta world_row_2      ; store big or small cactus on the next cell
+  inc                  ; restore original cactus location cell offset
+  inc                  ; point B register to previous cell offset
+  lda world_row_2      ; source it's content
+  dcr                  ; then drop back to current cell again
+  sta world_row_2      ; and replace it's content byte the content of the previous cell
   pop
   lpc scroll_loop_end
 
@@ -129,9 +136,9 @@ world_row_2:
   byte 0x20
   byte 0x20
   byte 0x20
+  byte 0x20
 
 random_object:
-  byte 0x20
   byte 0x20
   byte 0xfe
 
