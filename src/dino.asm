@@ -6,7 +6,7 @@ start:                  ; for programs bigger than around 200 bytes
 
 world_row_1:
   byte 0x20
-  byte 0x20
+  byte 0x20 ; dino jumps here
   byte 0x20
   byte 0x20
   byte 0x20
@@ -24,7 +24,7 @@ world_row_1:
 
 world_row_2:
   byte 0x20
-  byte 0x00
+  byte 0x00 ; dino
   byte 0x20
   byte 0x20
   byte 0x20
@@ -116,45 +116,39 @@ game_loop:
   jmp dino_jump  
 
 game_continue:
+  dbg ; stucks here after jump
   sbr update_world
   lpc game_loop
 
 dino_jump:
-  ldi 0x00
-  tab
-  ldi 0x00
-  pos
-  
-  ldi 0x01
-  tab
-  
-  lda world_row_2
-  sta world_row_1
-  
-  ldi 0x20
-  sta world_row_2
-  
-  sbr update_world
-  sbr update_world
-  sbr update_world
-  sbr update_world  
-  
-  ldi 0x00
-  tab
-  ldi 0x00
-  pos
-  
-  ldi 0x01
-  tab
-  
-  lda world_row_1
-  sta world_row_2
-  
-  ldi 0x20
-  sta world_row_1
-  
-  
-  lpc game_loop
+  ;ldi 0x00
+  ;tab
+  ;ldi 0x00
+  ;pos
+  ;ldi 0x01
+  ;tab
+  ;lda world_row_2
+  ;sta world_row_1
+  ;ldi 0x20
+  ;sta world_row_2
+  ;sbr update_world
+  ;sbr update_world
+  ;sbr update_world
+  ;sbr update_world
+  ;ldi 0x00
+  ;tab
+  ;ldi 0x00
+  ;pos
+  ;ldi 0x01
+  ;tab
+  ;lda world_row_1
+  ;sta world_row_2
+  ;ldi 0x20
+  ;sta world_row_1
+  ;ldi 0x20
+  ;dcr
+  ;sta world_row_2
+  lpc game_loop ;game_continue
 
 update_world:          ; print game world procedure
   dly 0xff
@@ -250,12 +244,14 @@ scroll_object:
   dcr                  ; then drop back to current cell again
   sta world_row_2      ; and replace it's content byte the content of the previous cell
   pop
+  
   lpc scroll_loop_end
 
 scroll_return:         ; all done
   ret                  ; return from procedure
 
 game_over:
+  pop
   pop
   pop
   pop
