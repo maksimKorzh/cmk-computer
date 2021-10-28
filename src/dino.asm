@@ -111,30 +111,54 @@ get_ready:
   lpc get_ready
 
 game_loop:  
-  out
-  ldi 0x61
-  ldi 0x61
-  ldi 0x61
-  ldi 0x61
-  ldi 0x61
-  ldi 0x61
-  ldi 0x61
-  ldi 0x61
-  ldi 0x61
-  ldi 0x61
-  ;ldi 0x61
-  
+  rch
+  cmp 0x30
+  jmp dino_jump  
 
 game_continue:
-  sbr scroll_world
   sbr update_world
-  dly 0xff
   lpc game_loop
 
-dino_jump:  
+dino_jump:
+  ldi 0x00
+  tab
+  ldi 0x00
+  pos
+  
+  ldi 0x01
+  tab
+  
+  lda world_row_2
+  sta world_row_1
+  
+  ldi 0x20
+  sta world_row_2
+  
+  sbr update_world
+  sbr update_world
+  sbr update_world
+  sbr update_world  
+  
+  ldi 0x00
+  tab
+  ldi 0x00
+  pos
+  
+  ldi 0x01
+  tab
+  
+  lda world_row_1
+  sta world_row_2
+  
+  ldi 0x20
+  sta world_row_1
+  
+  
   lpc game_loop
 
 update_world:          ; print game world procedure
+  dly 0xff
+  sbr scroll_world
   ldi 0x00             ; load 0 to A register
   tab                  ; transfer the 0 from A to B register
 
