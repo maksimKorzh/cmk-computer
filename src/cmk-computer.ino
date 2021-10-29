@@ -152,6 +152,10 @@ Keypad keypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_col
     0002 0002  0x22  POP  pop register B, then register A from stack
     0002 0003  0x23  SBR  call subroutine
     0002 0004  0x24  RET  return from subroutine
+    ----------------------------------------------------------
+    0002 0005  0x25  NUM  print decimal number
+    0002 0006  0x26  INM  increment value in memory
+    0002 0007  0x27  DCM  decrement value in memory
     
  ================================================================
 \****************************************************************/
@@ -194,6 +198,9 @@ Keypad keypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_col
 #define POP 0x22
 #define SBR 0x23
 #define RET 0x24
+#define NUM 0x25
+#define INM 0x26
+#define DCM 0x27
 
 // define commands
 #define CLEAR 0xfffa
@@ -361,6 +368,9 @@ void execute() {
       case POS: lcd.setCursor(register_A, register_B); break;
       case DLY: delay(read_byte()); break;
       case RND: zero_flag = (register_A = random(read_byte())); break;
+      case NUM: lcd.print(memory[read_word()]); break;
+      case INM: zero_flag = (++memory[read_word()] == 0); break;
+      case DCM: zero_flag = (--memory[read_word()] == 0); break;
       case PSH:
         memory[stack_pointer--] = register_A;
         memory[stack_pointer--] = register_B;
@@ -385,15 +395,15 @@ void execute() {
         break;
       case SPR: lcd.write(byte(read_byte())); break;
       case DBG:
-        Serial.print("Register A: ");
+        Serial.print("Register A: 0x");
         Serial.println(register_A, HEX);
-        Serial.print("Register B: ");
+        Serial.print("Register B: 0x");
         Serial.println(register_B, HEX);
-        Serial.print("Program Counter: ");
+        Serial.print("Program Counter: 0x");
         Serial.println(program_counter, HEX);
-        Serial.print("Stack pointer:");
+        Serial.print("Stack pointer: 0x");
         Serial.println(stack_pointer, HEX);
-        Serial.print("Zero Flag: ");
+        Serial.print("Zero Flag: 0x");
         Serial.println(zero_flag, HEX);
         break;
       default:

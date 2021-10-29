@@ -4,6 +4,60 @@ start:                  ; for programs bigger than around 200 bytes
                         ; local variable addresses may exceed 0xff resulting
                         ; in undefined behavior
 
+score:
+  byte 0x00
+
+intro:
+  byte 0x20
+  byte 0x41
+  byte 0x52
+  byte 0x45
+  byte 0x20
+  byte 0x59
+  byte 0x4f
+  byte 0x55
+  byte 0x20
+  byte 0x52
+  byte 0x45
+  byte 0x41
+  byte 0x44
+  byte 0x59
+  byte 0x3f
+  byte 0x20
+  byte 0xfe
+
+outro_lose:
+  byte 0x47
+  byte 0x41
+  byte 0x4d
+  byte 0x45
+  byte 0x20
+  byte 0x4f
+  byte 0x56
+  byte 0x45
+  byte 0x52
+  byte 0x21
+  byte 0xfe
+
+outro_win:
+  byte 0x20
+  byte 0x00
+  byte 0x02
+  byte 0x20
+  byte 0x59
+  byte 0x4f
+  byte 0x55
+  byte 0x20
+  byte 0x57
+  byte 0x49
+  byte 0x4e
+  byte 0x21
+  byte 0x20
+  byte 0x02
+  byte 0x00
+  byte 0x20
+  byte 0xfe
+
 world_row_1:
   byte 0x20
   byte 0x20 ; dino jumps here
@@ -104,51 +158,63 @@ init:                 ; program start
   ldi 0x04
   udg
 
+  ldi 0x00     ; load 0 to A register
+  tab          ; transfer the 0 from A to B register
+  cls
+  
+print_intro:           ; print string loop
+  lda intro      ; load byte at 'hello' label address + B register offset
+  cmp 0xfe       ; zero terminating character?
+  jmp get_ready     ; if so then exit the program
+  dly 0x50
+  out            ; print character to LCD display
+  inc            ; increment B reister by 1
+  lpc print_intro      ; jump to 'print' label
+
 get_ready:
   rch
   cmp 0x30
-  jmp game_loop
+  jmp clear_screen
   lpc get_ready
 
-game_loop:  
+clear_screen:
+  cls
+
+game_loop:
   rch
   cmp 0x30
-  jmp dino_jump  
-
-game_continue:
-  dbg ; stucks here after jump
+  jmp dino_jump
   sbr update_world
   lpc game_loop
 
 dino_jump:
-  ;ldi 0x00
-  ;tab
-  ;ldi 0x00
-  ;pos
-  ;ldi 0x01
-  ;tab
-  ;lda world_row_2
-  ;sta world_row_1
-  ;ldi 0x20
-  ;sta world_row_2
-  ;sbr update_world
-  ;sbr update_world
-  ;sbr update_world
-  ;sbr update_world
-  ;ldi 0x00
-  ;tab
-  ;ldi 0x00
-  ;pos
-  ;ldi 0x01
-  ;tab
-  ;lda world_row_1
-  ;sta world_row_2
-  ;ldi 0x20
-  ;sta world_row_1
-  ;ldi 0x20
-  ;dcr
-  ;sta world_row_2
-  lpc game_loop ;game_continue
+  ldi 0x00
+  tab
+  ldi 0x00
+  pos
+  ldi 0x01
+  tab
+  lda world_row_2
+  sta world_row_1
+  ldi 0x20
+  sta world_row_2
+  sbr update_world
+  sbr update_world
+  sbr update_world
+  ldi 0x00
+  tab
+  ldi 0x00
+  pos
+  ldi 0x01
+  tab
+  lda world_row_1
+  sta world_row_2
+  ldi 0x20
+  sta world_row_1
+  ldi 0x20
+  dcr
+  sta world_row_2
+  lpc game_loop
 
 update_world:          ; print game world procedure
   dly 0xff
@@ -191,6 +257,19 @@ next_line:             ; handle LCD cursor placement
   lpc load_next_char   ; print the rest of the game world
 
 update_return:         ; all done
+  inm score  
+  psh
+  ldi 0x00
+  tab
+  ldi 0x0d
+  pos
+  num score
+  ldi 0x20
+  out
+  out
+  lda score
+  jmp win
+  pop
   ret                  ; return from procedure
 
 scroll_world:          ; infinite scroll game world
@@ -213,6 +292,7 @@ set_object:            ; random source set
   
   
 scroll_loop:           ; loop over bytes in game world row 2
+  inc
   lda world_row_2      ; load address of world_row_2 to A register
   cmp 0x02
   jmp scroll_object
@@ -222,7 +302,7 @@ scroll_loop:           ; loop over bytes in game world row 2
 scroll_loop_end:
   cmp 0xfe             ; end of row?
   jmp scroll_return    ; all done
-  inc
+  ;inc
   lpc scroll_loop      ; scroll next byte
 
 scroll_object:
@@ -273,4 +353,58 @@ reset_loop:
 
 reset_end:
   pop
+
+  ldi 0x01
+  tab
+  ldi 0x03
+  pos
+
+reset_score:
+  dcm score
+  jmp all_done
+  lpc reset_score
+
+all_done:
+  ldi 0x00
+  tab
+
+print_outro_lose:           ; print string loop
+  lda outro_lose      ; load byte at 'hello' label address + B register offset
+  cmp 0xfe       ; zero terminating character?
+  jmp exit     ; if so then exit the program
+  dly 0x50
+  out            ; print character to LCD display
+  inc            ; increment B reister by 1
+  lpc print_outro_lose      ; jump to 'print' label
+  
+exit:
+  crs
   byte 0x00
+
+win:
+  pop
+  pop
+  
+  ldi 0x01
+  tab
+  ldi 0x00
+  pos
+  
+  ldi 0x00
+  tab
+
+print_outro_win:           ; print string loop
+  lda outro_win      ; load byte at 'hello' label address + B register offset
+  cmp 0xfe       ; zero terminating character?
+  jmp idle     ; if so then exit the program
+  dly 0x50
+  out            ; print character to LCD display
+  inc            ; increment B reister by 1
+  lpc print_outro_win      ; jump to 'print' label
+  
+idle:
+  dly 0xff
+  dly 0xff
+  dly 0xff
+  dly 0xff
+  lpc reset_map

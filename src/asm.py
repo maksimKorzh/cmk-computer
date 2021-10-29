@@ -50,7 +50,10 @@ opcodes = {
     'PSH': 0x21,
     'POP': 0x22,
     'SBR': 0x23,
-    'RET': 0x24
+    'RET': 0x24,
+    'NUM': 0x25,
+    'INM': 0x26,
+    'DCM': 0x27
 }
 
 # program labels
@@ -91,7 +94,7 @@ with open(filename) as input_file:
                     if '0x00' in arg and len(arg) == 6:
                         byte_count += 1
                     if arg[0].isalpha():
-                        if line.split()[0] in ['LDA', 'STA', 'LPC', 'JMP', 'SBR']:
+                        if line.split()[0] in ['LDA', 'STA', 'LPC', 'JMP', 'SBR', 'NUM', 'INM', 'DCM']:
                             byte_count += 1
                 
                 except:
@@ -141,7 +144,7 @@ with open(filename) as input_file:
                 except:
                     try:
                         if ('0x00') in labels[arg] and len(labels[arg]) == 6:
-                            if opcode in ['LDA', 'STA', 'LPC', 'JMP', 'SBR']:
+                            if opcode in ['LDA', 'STA', 'LPC', 'JMP', 'SBR', 'NUM', 'INM', 'DCM']:
                                 program.append(0);
 
                         value = int(labels[arg.split(';')[0].strip()], 16)
