@@ -4,19 +4,19 @@ start:                  ; for programs bigger than around 200 bytes
                         ; local variable addresses may exceed 0xff resulting
                         ; in undefined behavior
 
-score:
-  byte 0x00
+score:                  ; game score
+  byte 0x00             ; score byte
 
-intro:
-  byte 0x20
-  byte 0x41
-  byte 0x52
-  byte 0x45
-  byte 0x20
-  byte 0x59
-  byte 0x4f
-  byte 0x55
-  byte 0x20
+intro:                  ; 'ARE YOU READY?'
+  byte 0x20             ; ' '
+  byte 0x41             ; 'A'
+  byte 0x52             ; 'R'
+  byte 0x45             ; 'E'
+  byte 0x20             ; ' '
+  byte 0x59             ; 'Y'
+  byte 0x4f             ; 'O'
+  byte 0x55             ; 'U'
+  byte 0x20             ; 
   byte 0x52
   byte 0x45
   byte 0x41

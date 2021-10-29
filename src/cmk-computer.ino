@@ -582,6 +582,7 @@ void loop() {
           lcd.print(' ');
         }
         
+        delay(300);
         memory_dump(addr);
         break;
     }    

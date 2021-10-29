@@ -14,7 +14,7 @@ loop:          ; program loop
   dly 0xff     ; wait 255 ms
   lpc loop     ; print next character
 
-exit:
-  byte 0x00
+exit:          ; end of program
+  byte 0x00    ; terminate execution
   
 
