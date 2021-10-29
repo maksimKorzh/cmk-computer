@@ -14,48 +14,33 @@
 #include <LiquidCrystal.h>
 #include <Keypad.h>
 
-/****************************************************************\
-   ================================================================
-                      CIRCUIT (Tinkercad version)
-   ================================================================
-                LCD RS pin to arduino digital pin 12
-                LCD Enable pin to arduino digital pin 11
-                LCD D4 pin to arduino digital pin 5
-                LCD D5 pin to arduino digital pin 4
-                LCD D6 pin to arduino digital pin 3
-                LCD D7 pin to arduino digital pin 2
-                LCD R/W pin to arduino ground
-                LCD VSS pin to arduino ground
-                LCD VCC pin to arduino 5V
-                PUSH BUTTON terminal 1a to arduino pin 7
-                PUSH BUTTON terminal 2a to ground
-    
-   ================================================================
-            CIRCUIT (LCD shield 1602A D1 ROBOT (DF ROBOT))
-   ================================================================
-                LCD RS pin to arduino digital pin 8
-                LCD Enable pin to arduino digital pin 9
-                LCD Backlight LED to arduino pin 10
-                LCD D4 pin to arduino digital pin 4
-                LCD D5 pin to arduino digital pin 5
-                LCD D6 pin to arduino digital pin 6
-                LCD D7 pin to arduino digital pin 7
-                LCD A0  to arduino A0 pin (LCD shield keypad) 
-                LCD VIN to arduino VIN pin
-                LCD GND to arduino GND pin
-                LCD 5V to arduino 5V pin
-                LCD RST to arduino RST pin
-                KEYPAD row 1 to arduino digital pin 12
-                KEYPAD row 2 to arduino digital pin 11
-                KEYPAD row 3 to arduino digital pin 3
-                KEYPAD row 4 to arduino digital pin 2
-                KEYPAD col 1 to arduino analog pin 4
-                KEYPAD col 2 to arduino analog pin 3
-                KEYPAD col 3 to arduino analog pin 2
-                KEYPAD col 4 to arduino analog pin 1
-                
-   ================================================================
-  \****************************************************************/
+/****************************************************************\    
+================================================================
+        CIRCUIT (LCD shield 1602A D1 ROBOT (DF ROBOT))
+================================================================
+            LCD RS pin to arduino digital pin 8
+            LCD Enable pin to arduino digital pin 9
+            LCD Backlight LED to arduino pin 10
+            LCD D4 pin to arduino digital pin 4
+            LCD D5 pin to arduino digital pin 5
+            LCD D6 pin to arduino digital pin 6
+            LCD D7 pin to arduino digital pin 7
+            LCD A0  to arduino A0 pin (LCD shield keypad) 
+            LCD VIN to arduino VIN pin
+            LCD GND to arduino GND pin
+            LCD 5V to arduino 5V pin
+            LCD RST to arduino RST pin
+            KEYPAD row 1 to arduino digital pin 12
+            KEYPAD row 2 to arduino digital pin 11
+            KEYPAD row 3 to arduino digital pin 3
+            KEYPAD row 4 to arduino digital pin 2
+            KEYPAD col 1 to arduino analog pin 4
+            KEYPAD col 2 to arduino analog pin 3
+            KEYPAD col 3 to arduino analog pin 2
+            KEYPAD col 4 to arduino analog pin 1
+            
+================================================================
+\****************************************************************/
 
 // uncomment to rotate keypad CCW, enable LCD shield buttons
 #define CMK_HARDWARE
@@ -110,7 +95,7 @@ Keypad keypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_col
     ----------------------------------------------------------
           bin   hex  asm  description
     ----------------------------------------------------------
-    0000 0000  0x00  NOP  no operation
+    0000 0000  0x00  NOP  no operation, resets program counter
     0000 0001  0x01  LDI  load immediate data to A register
     0000 0010  0x02  LDA  load data from memory to A register with register B offset
     0000 0011  0x03  TAB  transfer data from A to B register
@@ -125,7 +110,7 @@ Keypad keypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_col
     0000 1100  0x0c  JMP  jump if zero flag is true
     0000 1101  0x0d  DBG  print debug info to serial port
     ----------------------------------------------------------
-    0000 1110  0x0e  IN   read character from keypad
+    0000 1110  0x0e  IN   get user input from keypad
     0000 1111  0x0f  OUT  output character to LCD
     ----------------------------------------------------------
     0001 0000  0x10  BIT  A & B, set zero flag
@@ -141,9 +126,9 @@ Keypad keypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_col
     0001 1001  0x19  SDR  Scrolls the contents of the display one space to the right
     0001 1010  0x1a  CRS  enable cursor
     0001 1011  0x1b  NCR  disable cursor
-    0001 1100  0x1c  UDG  user defined character
-    0001 1101  0x1d  SPR  draw sprite (user defined character)
-    0001 1110  0x1e  POS  set cursor at position (register A = column, register B = row)
+    0001 1100  0x1c  UDG  user defined character (A equals id, B points to bytes)
+    0001 1101  0x1d  SPR  draw sprite ( A equals to user defined character)
+    0001 1110  0x1e  POS  set cursor at position (A = column, B = row)
     ----------------------------------------------------------
     0001 1111  0x1f  DLY  delay execution
     0002 0000  0x20  RND  load random number between 0 and 0xff into A register
