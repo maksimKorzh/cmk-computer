@@ -7,7 +7,7 @@
                      
                           Code Monkey King
 
-================================================================
+ ================================================================
 \****************************************************************/
 
 // libraries
@@ -490,14 +490,6 @@ void setup() {
   
   // reset computer  
   init_computer();
-}
-
-void shift_value(int i) {
-  int count = 2;
-  while (true) {
-    if (memory[i - count] != 0) { memory[i - count + 1] = memory[i - 1]; break; }
-    else count++;
-  }
 }
 
 // arduino loop
