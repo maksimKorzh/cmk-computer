@@ -3,6 +3,9 @@ CMK computer is a bundle of arduino nano/uno, 16x2 LCD shield and 4x4 keypad<br>
 8-bit CPU emulator and a hex editor are flashed into ATMega328 microcontroller<br>
 Programs can be entered via machine codes from the keypad or loaded via serial port<br>
 
+# Video demo
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/Rvx2P4ulBlA/0.jpg)](https://www.youtube.com/watch?v=Rvx2P4ulBlA)
+
 # Memory
  - 1k of RAM
  - stack (stack pointer points to the last byte in RAM and growth downwards)
