@@ -30,7 +30,7 @@ Programs can be entered via machine codes from the keypad or loaded via serial p
     0x03  TAB        transfer data from A to B register
     0x04  ADD  byte  add immediate data to A register and store it
     0x05  SUB  byte  subtract immediate data from A register and store it
-    0x06  STA  word  set value from A register at memory address
+    0x06  STA  word  set value from A register at memory address with register B offset
     0x07  RCH        read character from keypad (non-blocking)
     0x08  LPC  word  load data from memory address to program counter
     0x09  INC        increment value in register B
