@@ -6,7 +6,7 @@ Programs can be entered via machine codes from the keypad or loaded via serial p
 # Memory
  - 1k of RAM
  - stack (stack pointer points to the last byte in RAM and growth downwards)
- - first 512 bytes are used to store program instructions
+ - first 512 bytes are used to store program instructions and variables
  - last 512 bytes are shared between program variables and stack
  - next 7 bytes after RAM hold registers' state,<br>
    however manipulating them directly is not recommended<br>
