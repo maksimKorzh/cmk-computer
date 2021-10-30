@@ -86,65 +86,6 @@ byte col_pins[num_cols] = {A4, A3, A2, A1};  // Columns 0 to 3
 // init kepad
 Keypad keypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_cols);
 
-
-/****************************************************************\
- ================================================================
-                              OPCODES
- ================================================================
-    
-    ----------------------------------------------------------
-          bin   hex  asm  description
-    ----------------------------------------------------------
-    0000 0000  0x00  NOP  no operation, resets program counter
-    0000 0001  0x01  LDI  load immediate data to A register
-    0000 0010  0x02  LDA  load data from memory to A register with register B offset
-    0000 0011  0x03  TAB  transfer data from A to B register
-    0000 0100  0x04  ADD  add A and B, store result to A register
-    0000 0101  0x05  SUB  subtract B from A, store result to A register
-    0000 0110  0x06  STA  set value from A register to memory
-    0000 0111  0x07  RCH  read character from keypad
-    0000 1000  0x08  LPC  load data from memory to program counter
-    0000 1001  0x09  INC  increment value in register B
-    0000 1010  0x0a  DCR  decrement value in register B
-    0000 1011  0x0b  CMP  compare register A and immediate value
-    0000 1100  0x0c  JMP  jump if zero flag is true
-    0000 1101  0x0d  DBG  print debug info to serial port
-    ----------------------------------------------------------
-    0000 1110  0x0e  IN   get user input from keypad
-    0000 1111  0x0f  OUT  output character to LCD
-    ----------------------------------------------------------
-    0001 0000  0x10  BIT  A & B, set zero flag
-    0001 0001  0x11  AND  A & B, store result to A register
-    0001 0010  0x12  OR   A | B, store result to A register
-    0001 0011  0x13  XOR  A ^ B, store result to A register
-    0001 0100  0x14  NOT  invert bits in A register
-    0001 0101  0x15  SHL  shift all bits one position left in A register
-    0001 0110  0x16  SHR  shift all bits one position right in A register
-    ----------------------------------------------------------
-    0001 0111  0x17  CLS  clear LCD display
-    0001 1000  0x18  SDL  Scrolls the contents of the display one space to the left
-    0001 1001  0x19  SDR  Scrolls the contents of the display one space to the right
-    0001 1010  0x1a  CRS  enable cursor
-    0001 1011  0x1b  NCR  disable cursor
-    0001 1100  0x1c  UDG  user defined character (A equals id, B points to bytes)
-    0001 1101  0x1d  SPR  draw sprite ( A equals to user defined character)
-    0001 1110  0x1e  POS  set cursor at position (A = column, B = row)
-    ----------------------------------------------------------
-    0001 1111  0x1f  DLY  delay execution
-    0002 0000  0x20  RND  load random number between 0 and 0xff into A register
-    ----------------------------------------------------------
-    0002 0001  0x21  PSH  push register A, then register B to stack
-    0002 0002  0x22  POP  pop register B, then register A from stack
-    0002 0003  0x23  SBR  call subroutine
-    0002 0004  0x24  RET  return from subroutine
-    ----------------------------------------------------------
-    0002 0005  0x25  NUM  print decimal number
-    0002 0006  0x26  INM  increment value in memory
-    0002 0007  0x27  DCM  decrement value in memory
-    
- ================================================================
-\****************************************************************/
-
 // define opcodes
 #define NOP 0x00
 #define LDI 0x01
