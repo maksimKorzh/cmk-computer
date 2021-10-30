@@ -26,38 +26,38 @@ Programs can be entered via machine codes from the keypad or loaded via serial p
     ----------------------------------------------------------
     0x00  NOP        no operation, resets program counter
     0x01  LDI  byte  load immediate data to A register
-    0x02  LDA  word  load data from memory to A register with register B offset
+    0x02  LDA  word  load data from memory address with register B offset to A register
     0x03  TAB        transfer data from A to B register
     0x04  ADD  byte  add immediate data to A register and store it
     0x05  SUB  byte  subtract immediate data from A register and store it
-    0x06  STA  word  set value from A register to memory
-    0x07  RCH        read character from keypad
-    0x08  LPC  word  load data from memory to program counter
+    0x06  STA  word  set value from A register at memory address
+    0x07  RCH        read character from keypad (non-blocking)
+    0x08  LPC  word  load data from memory address to program counter
     0x09  INC        increment value in register B
     0x0a  DCR        decrement value in register B
-    0x0b  CMP  byte  compare register A and immediate value
+    0x0b  CMP  byte  compare register A and immediate value, set zero flag
     0x0c  JMP  word  jump program counter to memory address if zero flag is true
     0x0d  DBG        print debug info to serial port
     ----------------------------------------------------------
-    0x0e  IN         get user input from keypad to A register
+    0x0e  IN         get user input from keypad to A register (blocking)
     0x0f  OUT        output character from A register to LCD
     ----------------------------------------------------------
-    0x10  BIT  byte  A bitwise AND immediate data, set zero flag
-    0x11  AND  byte  A bitwise AND immediate data, store result to A register
-    0x12  OR   byte  A bitwise OR immediate data, store result to A register
-    0x13  XOR  byte  A bitwise XOR immediate data, store result to A register
+    0x10  BIT  byte  bitwise AND register A with immediate data, set zero flag
+    0x11  AND  byte  bitwise AND register A with immediate data, store result to A register
+    0x12  OR   byte  bitwise OR register A with immediate data, store result to A register
+    0x13  XOR  byte  bitwise XOR register A with immediate data, store result to A register
     0x14  NOT  byte  bitwise NOT immediate data, store result to A register
-    0x15  SHL  byte  A bitwise shift left by immediate data
-    0x16  SHR  byte  A bitwise shift right by immediate data
+    0x15  SHL  byte  bitwise shift left register A with immediate data
+    0x16  SHR  byte  bitwise shift right register A with immediate data
     ----------------------------------------------------------
     0x17  CLS        clear LCD display
     0x18  SDL        Scrolls the contents of the display one space to the left
     0x19  SDR        Scrolls the contents of the display one space to the right
     0x1a  CRS        enable cursor (blink)
     0x1b  NCR        disable cursor (no blink)
-    0x1c  UDG        user defined character (A equals id, B points to bytes)
-    0x1d  SPR  byte  draw sprite (A equals to user defined character)
-    0x1e  POS        set cursor at position (A = column, B = row)
+    0x1c  UDG        create user defined character (assumes: A equals character id (0-7), B points to byte array)
+    0x1d  SPR  byte  draw sprite (0-7)
+    0x1e  POS        set cursor at position (assumes: A equals to column, B equals to row)
     ----------------------------------------------------------
     0x1f  DLY  byte  delay execution
     0x20  RND  byte  load random number between 0 and immediate date into A register
