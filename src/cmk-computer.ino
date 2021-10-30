@@ -361,10 +361,10 @@ char getch() {
       int shield_input;
       shield_input = analogRead (0);
       if (shield_input < 60) { delay(300); command_save(); }          // button right
-      else if (shield_input < 200) { delay(300); command_view(); }   // button up
+      else if (shield_input < 200) { delay(300); command_view(); }    // button up
       else if (shield_input < 400) { delay(300); command_clear(); }   // button down
       else if (shield_input < 600) { delay(300); command_load(); }    // button left
-      else if (shield_input < 800) { delay(300); command_run(); }    // button select
+      else if (shield_input < 800) { delay(300); command_run(); }     // button select
     #endif
   }
 

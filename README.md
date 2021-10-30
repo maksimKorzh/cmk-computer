@@ -3,6 +3,23 @@ CMK computer is a bundle of arduino nano/uno, 16x2 LCD shield and 4x4 keypad<br>
 8-bit CPU emulator and a hex editor are flashed into ATMega328 microcontroller<br>
 Programs can be entered via machine codes from the keypad or loaded via serial port<br>
 
+# Memory map
+ - 1k of RAM
+ - stack (stack pointer points to the last byte in RAM and growth downwards)
+ - first 512 bytes are used to store instructions
+ - last 512 bytes are shared between program variables and stack
+ - next 7 bytes after RAM hold registers' state,<br>
+   however manipulating them directly is not recommended<br>
+   unless you know exactly what are you doing)
+
+# Control commands
+    FFFD  (LCD shield 'left' button)    load program via serial port
+    FFFF  (LCD shield 'select' button)  run program
+    FFFC  (LCD shield 'up' button)      memory dump at entered address
+    FFFA  (LCD shield 'down' button)    clear LCD screen
+    FFFB  (LCD shield 'reset' button)   software/hardware reset
+    FFFE  (LCD shield 'right' button)   save program via serial port (memory dump)
+
 # Operation codes / Assembly mnemonics
     ----------------------------------------------------------
      hex  asm  arg   description
@@ -93,15 +110,13 @@ Programs can be entered via machine codes from the keypad or loaded via serial p
       pos          ; position cursor at A, B (col 0, row 2)
       byte 0x00    ; execution terminates here
 
-# How to assemble
+# How to assemble program
     python3 assembler.py hello.asm
 
 # Try it online
 https://www.tinkercad.com/things/9SkBg4xUM7Y
 
-# Connect LCD shield
+# Circuit examples
 ![LCD connect](https://raw.githubusercontent.com/maksimKorzh/cmk-computer/main/LCD_connect.png?token=AIFH42ONBYZL4KWSQ5HZGL3BPQDE4)
-
-# 4x4 Keypad connect
 ![Keypad_connect](https://raw.githubusercontent.com/maksimKorzh/cmk-computer/main/Keypad_connect.png?token=AIFH42PHZAH27XM37VCJ2NDBPQDDO)
 
