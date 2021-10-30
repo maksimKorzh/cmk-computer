@@ -3,7 +3,7 @@ CMK computer is a bundle of arduino nano/uno, 16x2 LCD shield and 4x4 keypad<br>
 8-bit CPU emulator and a hex editor are flashed into ATMega328 microcontroller<br>
 Programs can be entered via machine codes from the keypad or loaded via serial port<br>
 
-# Memory map
+# Memory
  - 1k of RAM
  - stack (stack pointer points to the last byte in RAM and growth downwards)
  - first 512 bytes are used to store instructions
@@ -15,10 +15,10 @@ Programs can be entered via machine codes from the keypad or loaded via serial p
 # Control commands
     FFFD  (LCD shield 'left' button)    load program via serial port
     FFFF  (LCD shield 'select' button)  run program
-    FFFC  (LCD shield 'up' button)      memory dump at entered address
+    FFFC  (LCD shield 'up' button)      show 4 byte in memory at entered address
     FFFA  (LCD shield 'down' button)    clear LCD screen
     FFFB  (LCD shield 'reset' button)   software/hardware reset
-    FFFE  (LCD shield 'right' button)   save program via serial port (memory dump)
+    FFFE  (LCD shield 'right' button)   save program via serial port (1k memory dump)
 
 # Operation codes / Assembly mnemonics
     ----------------------------------------------------------
