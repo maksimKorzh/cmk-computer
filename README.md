@@ -6,6 +6,10 @@ Programs can be entered via machine codes from the keypad or loaded via serial p
 # Video demo
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/Rvx2P4ulBlA/0.jpg)](https://www.youtube.com/watch?v=Rvx2P4ulBlA)
 
+# Try it online
+[![IMAGE ALT TEXT HERE](https://maksimkorzh.github.io/cmk-computer/)](https://raw.githubusercontent.com/maksimKorzh/cmk-computer/main/Keypad_connect.png?token=AIFH42PHZAH27XM37VCJ2NDBPQDDO)
+
+
 # Memory
  - 1k of RAM
  - stack (stack pointer points to the last byte in RAM and growth downwards)
@@ -116,10 +120,6 @@ Programs can be entered via machine codes from the keypad or loaded via serial p
 # How to assemble program
     python3 assembler.py hello.asm
 
-# Try it online
-https://www.tinkercad.com/things/9SkBg4xUM7Y
-
-# Circuit examples
+# Circuit example
 ![LCD connect](https://raw.githubusercontent.com/maksimKorzh/cmk-computer/main/LCD_connect.png?token=AIFH42ONBYZL4KWSQ5HZGL3BPQDE4)
-![Keypad_connect](https://raw.githubusercontent.com/maksimKorzh/cmk-computer/main/Keypad_connect.png?token=AIFH42PHZAH27XM37VCJ2NDBPQDDO)
 
