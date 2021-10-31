@@ -7,7 +7,7 @@ Programs can be entered via machine codes from the keypad or loaded via serial p
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/Rvx2P4ulBlA/0.jpg)](https://www.youtube.com/watch?v=Rvx2P4ulBlA)
 
 # Try it online
-[![IMAGE ALT TEXT HERE](https://maksimkorzh.github.io/cmk-computer/)](https://raw.githubusercontent.com/maksimKorzh/cmk-computer/main/Keypad_connect.png?token=AIFH42PHZAH27XM37VCJ2NDBPQDDO)
+[![IMAGE ALT TEXT HERE](https://raw.githubusercontent.com/maksimKorzh/cmk-computer/main/Keypad_connect.png?token=AIFH42PHZAH27XM37VCJ2NDBPQDDO)](https://maksimkorzh.github.io/cmk-computer/)
 
 
 # Memory
