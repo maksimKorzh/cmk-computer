@@ -117,7 +117,7 @@ Programs can be entered via machine codes from the keypad or loaded via serial p
       pos          ; position cursor at A, B (col 0, row 2)
       byte 0x00    ; execution terminates here
 
-# How to assemble program
+# Assemble program
     python3 assembler.py hello.asm
 
 # Circuit example
