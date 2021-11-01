@@ -4,7 +4,7 @@ CMK computer is a bundle of arduino nano/uno, 16x2 LCD shield and 4x4 keypad<br>
 Programs can be entered via machine codes from the keypad or loaded via serial port<br>
 
 # Video demo
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/Rvx2P4ulBlA/0.jpg)](https://www.youtube.com/watch?v=Rvx2P4ulBlA)
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/Rvx2P4ulBlA/0.jpg)](https://www.youtube.com/watch?v=BFnaWnjz324&list=PLLfIBXQeu3aaMjeyPxJzT34DAG6v1vQqq)
 
 # Try it online
 [![IMAGE ALT TEXT HERE](https://raw.githubusercontent.com/maksimKorzh/cmk-computer/main/Keypad_connect.png?token=AIFH42PHZAH27XM37VCJ2NDBPQDDO)](https://maksimkorzh.github.io/cmk-computer/)
