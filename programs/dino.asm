@@ -1,7 +1,3 @@
-
-%define A 0x0000
-;%define B 0x0001
-
 start:                  ; for programs bigger than around 200 bytes
   lpc init              ; make sure to store data in the beginning of the file
                         ; and then jump to program start for otherwise
