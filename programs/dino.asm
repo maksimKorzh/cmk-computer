@@ -1,10 +1,21 @@
+;----------------------------------------;
+;
+;    Chrome Dino port to CMK computer
+;
+;                   by
+;
+;            Code Monkey King
+;
+;----------------------------------------;
+
 start:                  ; for programs bigger than around 200 bytes
   lpc init              ; make sure to store data in the beginning of the file
                         ; and then jump to program start for otherwise
                         ; local variable addresses may exceed 0xff resulting
                         ; in undefined behavior, however if you're using direct
                         ; addressing for LDA/STA instructions instead of labels
-                        ; you're free to put variables wherever in memory you like.
+                        ; or %define directives you're free to put variables
+                        ; wherever in memory you like.
 
 score:                  ; game score
   byte 0x00             ; score byte
