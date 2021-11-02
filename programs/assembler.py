@@ -77,6 +77,14 @@ with open(filename) as input_file:
 
     # init labels
     for line in src:
+        if '%DEFINE' in line:
+            if len(line.split()) != 3:
+                print('%define takes 2 args but ' + str(len(line.split())) + ' are given!');
+                sys.exit()
+            else:
+                labels[line.split()[1]] = line.split()[2]
+                continue
+
         if line != '':
             try:
                 if ':' in line.split(';')[1]:
@@ -120,6 +128,7 @@ with open(filename) as input_file:
 
     # assemble code
     for line in src:
+        if '%DEFINE' in line: continue
         if line != '':
             try:
                 if ':' in line: continue

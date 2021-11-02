@@ -1,13 +1,7 @@
-white_pieces:
-  ;byte 0x00
+%define BOARD 0x0200
 
-init_board:
-  ldi 0x61
-  ser
-  ldi 0x062
-  ser
-  ldi 0x0a
-  ser
-  ldi 0x61
-  ser
+
+start:
+  lda BOARD
   byte 0x00
+  
