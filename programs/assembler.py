@@ -53,7 +53,8 @@ opcodes = {
     'RET': 0x24,
     'NUM': 0x25,
     'INM': 0x26,
-    'DCM': 0x27
+    'DCM': 0x27,
+    'SER': 0x28
 }
 
 # program labels

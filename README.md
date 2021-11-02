@@ -77,6 +77,8 @@ Programs can be entered via machine codes from the keypad or loaded via serial p
     0x25  NUM  word  print decimal number at memory address
     0x26  INM  word  increment value at memory address
     0x27  DCM  word  decrement value at memory address
+    ----------------------------------------------------------
+    0x28  SER        output character from A register to serial port
 
 # Hello world example program
     start:         ; program start

@@ -127,6 +127,7 @@ Keypad keypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_col
 #define NUM 0x25
 #define INM 0x26
 #define DCM 0x27
+#define SER 0x28
 
 // define commands
 #define CLEAR 0xfffa
@@ -279,6 +280,7 @@ void execute() {
       case RCH: zero_flag = (register_A = keypad.getKey()) == 0; break;
       case IN: while ((register_A = keypad.getKey()) == NO_KEY); break;
       case OUT: lcd.print(char(register_A)); break;
+      case SER: Serial.print(char(register_A)); break;
       case BIT: zero_flag = ((register_A & read_byte()) == 0); break;
       case AND: zero_flag = ((register_A &= read_byte()) == 0); break;
       case OR: zero_flag = ((register_A |= read_byte()) == 0); break;
