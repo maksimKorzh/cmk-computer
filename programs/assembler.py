@@ -78,12 +78,15 @@ with open(filename) as input_file:
     # init labels
     for line in src:
         if '%DEFINE' in line:
-            if len(line.split()) != 3:
+            if len(line.split(';')[0].split()) and len(line.split(';')[0].split()) != 3:
                 print('%define takes 2 args but ' + str(len(line.split())) + ' are given!');
                 sys.exit()
             else:
-                labels[line.split()[1]] = line.split()[2]
-                continue
+                try:
+                    labels[line.split(';')[0].split()[1]] = line.split()[2].replace('X', 'x')
+                    continue
+                except:
+                    pass
 
         if line != '':
             try:
