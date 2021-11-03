@@ -1,30 +1,181 @@
-;---------------------------------------;
+;--------------------------------------------------------------------------------------------------------;
 ;
-;    Chess program for CMK computer
+;                                   Chess program for CMK computer
 ;
-;                  by
+;                                                  by
 ;
-;           Code Monkey King
+;                                           Code Monkey King
 ;
-;---------------------------------------;
+;--------------------------------------------------------------------------------------------------------;
+;--------------------------------------------------------------------------------------------------------;
+;                                            PIECE ENCODING
+;--------------------------------------------------------------------------------------------------------;
+;
+;                                  WHITE PAWN    0x01 | 0x08 = 0x09
+;                                  WHITE KING    0x03 | 0x08 = 0x0b
+;                                  WHITE KNIGHT  0x04 | 0x08 = 0x0c
+;                                  WHITE BISHOP  0x05 | 0x08 = 0x0d
+;                                  WHITE ROOK    0x06 | 0x08 = 0x0e
+;                                  WHITE QUEEN   0x07 | 0x08 = 0x0f
+;
+;                                  BLACK PAWN    0x02 | 0x10 = 0x12
+;                                  BLACK KING    0x03 | 0x10 = 0x13
+;                                  BLACK KNIGHT  0x04 | 0x10 = 0x14
+;                                  BLACK BISHOP  0x05 | 0x10 = 0x15
+;                                  BLACK ROOK    0x06 | 0x10 = 0x16
+;                                  BLACK QUEEN   0x07 | 0x10 = 0x17
+;
+;--------------------------------------------------------------------------------------------------------;
+;--------------------------------------------------------------------------------------------------------;
+;                                     BOARD REPRESENTATION (0x88)
+;--------------------------------------------------------------------------------------------------------;
+;
+;                                PIECES                       POSITIONAL SCORES
+;                   ------------------------------     ------------------------------
+;                   16  14  15  17  13  15  14  16     00  00  00  00  00  00  00  00
+;                   12  12  12  12  12  12  12  12     00  00  00  00  00  00  00  00
+;                   00  00  00  00  00  00  00  00     00  00  00  00  00  00  00  00
+;                   00  00  00  00  00  00  00  00     00  00  00  00  00  00  00  00    
+;                   00  00  00  00  00  00  00  00     00  00  00  00  00  00  00  00
+;                   00  00  00  00  00  00  00  00     00  00  00  00  00  00  00  00
+;                   09  09  09  09  09  09  09  09     00  00  00  00  00  00  00  00
+;                   0e  0c  0d  0b  0f  0d  0c  0e     00  00  00  00  00  00  00  00
+;
+;--------------------------------------------------------------------------------------------------------;
+%define WHITE_PAWN    0x09                          ; maps to ASCII 'P' in print_board routine
+%define WHITE_KNIGHT  0x0c                          ; maps to ASCII 'N' in print_board routine
+%define WHITE_BISHOP  0x0d                          ; maps to ASCII 'B' in print_board routine
+%define WHITE_ROOK    0x0e                          ; maps to ASCII 'R' in print_board routine
+%define WHITE_QUEEN   0x0f                          ; maps to ASCII 'Q' in print_board routine
+%define WHITE_KING    0x0b                          ; maps to ASCII 'K' in print_board routine
+%define BLACK_PAWN    0x12                          ; maps to ASCII 'p' in print_board routine
+%define BLACK_KNIGHT  0x14                          ; maps to ASCII 'n' in print_board routine
+%define BLACK_BISHOP  0x15                          ; maps to ASCII 'b' in print_board routine
+%define BLACK_ROOK    0x16                          ; maps to ASCII 'r' in print_board routine
+%define BLACK_QUEEN   0x17                          ; maps to ASCII 'q' in print_board routine
+%define BLACK_KING    0x13                          ; maps to ASCII 'k' in print_board routine
+%define EMPTY_SQUARE  0x00                          ; maps to ASCII '.' in print_board routine
+;--------------------------------------------------------------------------------------------------------;
+%define BOARD_START   0x0200                        ; address of board array index 0
+%define BOARD_END     0x0280                        ; address of board array index 128
+%define A8            0x0200                        ; address of board array index 0
+%define A7            0x0210                        ; address of board array index 32
+;--------------------------------------------------------------------------------------------------------;
+start:                                              ; program start
+  lpc init_board                                    ; jump to init_board
+;--------------------------------------------------------------------------------------------------------;
+white_pieces:
+  byte WHITE_ROOK
+  byte WHITE_KNIGHT
+  byte WHITE_BISHOP
+  byte WHITE_QUEEN
+  byte WHITE_KING
+  byte WHITE_BISHOP
+  byte WHITE_KNIGHT
+  byte WHITE_ROOK
+;--------------------------------------------------------------------------------------------------------;
+black_pieces:
+  byte BLACK_ROOK
+  byte BLACK_KNIGHT
+  byte BLACK_BISHOP
+  byte BLACK_QUEEN
+  byte BLACK_KING
+  byte BLACK_BISHOP
+  byte BLACK_KNIGHT
+  byte BLACK_ROOK
+;--------------------------------------------------------------------------------------------------------;
+ascii_pieces:                                       ; ".-pknbrq-P-KNBRQ"
+  byte 0x2e                                         ; '.'
+  byte 0x2d                                         ; '-'
+  byte 0x70                                         ; 'p'
+  byte 0x6b                                         ; 'k'
+  byte 0x6e                                         ; 'n'
+  byte 0x62                                         ; 'b'
+  byte 0x72                                         ; 'r'
+  byte 0x71                                         ; 'q'
+  byte 0x2d                                         ; '-'
+  byte 0x50                                         ; 'P'
+  byte 0x2d                                         ; '-'
+  byte 0x4b                                         ; 'K'
+  byte 0x4e                                         ; 'N'
+  byte 0x42                                         ; 'B'
+  byte 0x52                                         ; 'R'
+  byte 0x51                                         ; 'Q'
+;--------------------------------------------------------------------------------------------------------;
+file_count:
+  byte 0x00
+;--------------------------------------------------------------------------------------------------------;
+init_board:
+  ldi 0x00
+  tab
+  ldi 0xff
+  sta BOARD_END
 
-;---------------------------------------;
-;
-;             PIECE ENCODING
-;
-;---------------------------------------;
-;  ------------------------------------
-;   PIECE          VAR    HEX    ASCII
-;  ------------------------------------
-;   White pawn     P      0x50   'P'
-;   White knight   N      0x4e   'N'
-;   White bishop   B      0x42   'B'
-;   White rook     R      0x52   'R'
-;   White queen    Q      0x51   'Q'
-;   White king     K
-;
-;   Black pawn     p      0x70   'p'
-;   Black knight   n      0x6e   'n'
-;   Black bishop   b      0x62   'b'
-;   Black 
+  sbr print_board
+  byte 0x00
+
+print_board:
+  ldi 0x00
+  tab
+
+print_loop:
+  lda BOARD_START
+  cmp 0xff
+  jmp print_return
+  
+  psh
+
+  psh
+  ldi 0x00
+  tab
+  lda file_count
+  cmp 0x08
+  jmp print_space
+  cmp 0x10
+  jmp print_new_line
+  pop
+  
+print_next:
+  
+  and 0x0f
+  tab
+  lda ascii_pieces
+  ser  
+  pop
+  
+  inc
+  inm file_count
+  lpc print_loop
+
+print_space:
+  ldi 0x20
+  ser
+  pop
+  lpc print_next
+
+print_new_line:
+  ldi 0x00
+  sta file_count
+  ldi 0x0a
+  ser
+  pop
+  lpc print_next
+
+print_return:
+  ret
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
