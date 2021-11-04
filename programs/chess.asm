@@ -60,6 +60,8 @@
 %define BOARD_END       0x0280                      ; address of board array index 128
 %define RANK_8          0x0200
 %define RANK_7          0x0210
+%define RANK_2          0x0260
+%define RANK_1          0x0270
 ;--------------------------------------------------------------------------------------------------------;
 start:                                              ; program start
   lpc game_loop                                     ; jump to init_board
@@ -84,6 +86,44 @@ ascii_pieces:                                       ; ".-pknbrq-P-KNBRQ"
 ;--------------------------------------------------------------------------------------------------------;
 file_count:
   byte 0x00
+
+pieces: ; 174 bytes
+  byte BLACK_ROOK
+  byte BLACK_KNIGHT
+  byte BLACK_BISHOP
+  byte BLACK_QUEEN
+  byte BLACK_KING
+  byte BLACK_BISHOP
+  byte BLACK_KNIGHT
+  byte BLACK_ROOK
+  byte 0xff
+  byte WHITE_PAWN
+  byte WHITE_PAWN
+  byte WHITE_PAWN
+  byte WHITE_PAWN
+  byte WHITE_PAWN
+  byte WHITE_PAWN
+  byte WHITE_PAWN
+  byte WHITE_PAWN
+  ;byte 0xfe
+  ;byte WHITE_ROOK
+  ;byte WHITE_KNIGHT
+  ;byte WHITE_BISHOP
+  ;byte WHITE_QUEEN
+  ;byte WHITE_KING
+  ;byte WHITE_BISHOP
+  ;byte WHITE_KNIGHT
+  ;byte WHITE_ROOK
+  ;byte 0xfe
+  ;byte BLACK_PAWN
+  ;byte BLACK_PAWN
+  ;byte BLACK_PAWN
+  ;byte BLACK_PAWN
+  ;byte BLACK_PAWN
+  ;byte BLACK_PAWN
+  ;byte BLACK_PAWN
+  ;byte BLACK_PAWN
+  byte 0xff
 ;--------------------------------------------------------------------------------------------------------;
 reset_board:
   ldi 0x00
@@ -104,29 +144,21 @@ reset_return:
   ret
 
 set_pieces:
-  ldi BLACK_ROOK
-  sbr set_black_piece
-  ldi BLACK_KNIGHT
-  sbr set_black_piece
-  ldi BLACK_BISHOP
-  sbr set_black_piece
-  ldi BLACK_QUEEN
-  sbr set_black_piece
-  ldi BLACK_KING
-  sbr set_black_piece
-  ldi BLACK_BISHOP
-  sbr set_black_piece
-  ldi BLACK_KNIGHT
-  sbr set_black_piece
-  ldi BLACK_ROOK
-  sbr set_black_piece
-  ret
+  ldi 0x10
+  tab
+  
+set_pieces_loop:
+  lda pieces
+  cmp 0xff
+  jmp set_pieces_return
 
-set_black_piece:
-  sta RANK_7
+set_piece:
+  sta BOARD_START
   inc
-  ret  
+  lpc set_pieces_loop
 
+set_pieces_return:
+  ret
 ;--------------------------------------------------------------------------------------------------------;
 print_board:
   ldi 0x00
@@ -176,6 +208,7 @@ print_return:
 ;--------------------------------------------------------------------------------------------------------;
 game_loop:
   sbr reset_board
+  sbr set_pieces
   sbr print_board
   ldi 0x0a
   ser
