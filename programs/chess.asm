@@ -42,47 +42,27 @@
 ;                   0e  0c  0d  0b  0f  0d  0c  0e     00  00  00  00  00  00  00  00
 ;
 ;--------------------------------------------------------------------------------------------------------;
-%define WHITE_PAWN    0x09                          ; maps to ASCII 'P' in print_board routine
-%define WHITE_KNIGHT  0x0c                          ; maps to ASCII 'N' in print_board routine
-%define WHITE_BISHOP  0x0d                          ; maps to ASCII 'B' in print_board routine
-%define WHITE_ROOK    0x0e                          ; maps to ASCII 'R' in print_board routine
-%define WHITE_QUEEN   0x0f                          ; maps to ASCII 'Q' in print_board routine
-%define WHITE_KING    0x0b                          ; maps to ASCII 'K' in print_board routine
-%define BLACK_PAWN    0x12                          ; maps to ASCII 'p' in print_board routine
-%define BLACK_KNIGHT  0x14                          ; maps to ASCII 'n' in print_board routine
-%define BLACK_BISHOP  0x15                          ; maps to ASCII 'b' in print_board routine
-%define BLACK_ROOK    0x16                          ; maps to ASCII 'r' in print_board routine
-%define BLACK_QUEEN   0x17                          ; maps to ASCII 'q' in print_board routine
-%define BLACK_KING    0x13                          ; maps to ASCII 'k' in print_board routine
-%define EMPTY_SQUARE  0x00                          ; maps to ASCII '.' in print_board routine
+%define WHITE_PAWN      0x09                        ; maps to ASCII 'P' in print_board routine
+%define WHITE_KNIGHT    0x0c                        ; maps to ASCII 'N' in print_board routine
+%define WHITE_BISHOP    0x0d                        ; maps to ASCII 'B' in print_board routine
+%define WHITE_ROOK      0x0e                        ; maps to ASCII 'R' in print_board routine
+%define WHITE_QUEEN     0x0f                        ; maps to ASCII 'Q' in print_board routine
+%define WHITE_KING      0x0b                        ; maps to ASCII 'K' in print_board routine
+%define BLACK_PAWN      0x12                        ; maps to ASCII 'p' in print_board routine
+%define BLACK_KNIGHT    0x14                        ; maps to ASCII 'n' in print_board routine
+%define BLACK_BISHOP    0x15                        ; maps to ASCII 'b' in print_board routine
+%define BLACK_ROOK      0x16                        ; maps to ASCII 'r' in print_board routine
+%define BLACK_QUEEN     0x17                        ; maps to ASCII 'q' in print_board routine
+%define BLACK_KING      0x13                        ; maps to ASCII 'k' in print_board routine
+%define EMPTY_SQUARE    0x00                        ; maps to ASCII '.' in print_board routine
 ;--------------------------------------------------------------------------------------------------------;
-%define BOARD_START   0x0200                        ; address of board array index 0
-%define BOARD_END     0x0280                        ; address of board array index 128
-%define A8            0x0200                        ; address of board array index 0
-%define A7            0x0210                        ; address of board array index 32
+%define BOARD_START     0x0200                      ; address of board array index 0
+%define BOARD_END       0x0280                      ; address of board array index 128
+%define RANK_8          0x0200
+%define RANK_7          0x0210
 ;--------------------------------------------------------------------------------------------------------;
 start:                                              ; program start
-  lpc init_board                                    ; jump to init_board
-;--------------------------------------------------------------------------------------------------------;
-white_pieces:
-  byte WHITE_ROOK
-  byte WHITE_KNIGHT
-  byte WHITE_BISHOP
-  byte WHITE_QUEEN
-  byte WHITE_KING
-  byte WHITE_BISHOP
-  byte WHITE_KNIGHT
-  byte WHITE_ROOK
-;--------------------------------------------------------------------------------------------------------;
-black_pieces:
-  byte BLACK_ROOK
-  byte BLACK_KNIGHT
-  byte BLACK_BISHOP
-  byte BLACK_QUEEN
-  byte BLACK_KING
-  byte BLACK_BISHOP
-  byte BLACK_KNIGHT
-  byte BLACK_ROOK
+  lpc game_loop                                     ; jump to init_board
 ;--------------------------------------------------------------------------------------------------------;
 ascii_pieces:                                       ; ".-pknbrq-P-KNBRQ"
   byte 0x2e                                         ; '.'
@@ -105,26 +85,58 @@ ascii_pieces:                                       ; ".-pknbrq-P-KNBRQ"
 file_count:
   byte 0x00
 ;--------------------------------------------------------------------------------------------------------;
-init_board:
+reset_board:
   ldi 0x00
   tab
   ldi 0xff
   sta BOARD_END
 
-  sbr print_board
-  byte 0x00
+reset_next:
+  lda BOARD_START
+  cmp 0xff
+  jmp reset_return
+  ldi EMPTY_SQUARE
+  sta BOARD_START
+  inc
+  lpc reset_next
 
+reset_return:
+  ret
+
+set_pieces:
+  ldi BLACK_ROOK
+  sbr set_black_piece
+  ldi BLACK_KNIGHT
+  sbr set_black_piece
+  ldi BLACK_BISHOP
+  sbr set_black_piece
+  ldi BLACK_QUEEN
+  sbr set_black_piece
+  ldi BLACK_KING
+  sbr set_black_piece
+  ldi BLACK_BISHOP
+  sbr set_black_piece
+  ldi BLACK_KNIGHT
+  sbr set_black_piece
+  ldi BLACK_ROOK
+  sbr set_black_piece
+  ret
+
+set_black_piece:
+  sta RANK_7
+  inc
+  ret  
+
+;--------------------------------------------------------------------------------------------------------;
 print_board:
   ldi 0x00
   tab
 
 print_loop:
   lda BOARD_START
-  cmp 0xff
+  cmp 0xff ; comment
   jmp print_return
-  
   psh
-
   psh
   ldi 0x00
   tab
@@ -136,13 +148,11 @@ print_loop:
   pop
   
 print_next:
-  
   and 0x0f
   tab
   lda ascii_pieces
   ser  
   pop
-  
   inc
   inm file_count
   lpc print_loop
@@ -163,6 +173,14 @@ print_new_line:
 
 print_return:
   ret
+;--------------------------------------------------------------------------------------------------------;
+game_loop:
+  sbr reset_board
+  sbr print_board
+  ldi 0x0a
+  ser
+  dbg
+  byte 0x00
 
 
 

@@ -78,11 +78,25 @@ with open(filename) as input_file:
     # init labels
     for line in src:
         if '%DEFINE' in line:
+            if 'BYTE' in line.split(';')[0] or 'WORD' in line.split(';')[0]:
+                print('"BYTE" or "WORD" can\'t be the part of the %define!')
+                sys.exit(1)
+            
+            try:
+                if int(line.split(';')[0].split()[1], 16):
+                    print('Label "' + line.split(';')[0].split()[1] + '" would be treated as HEX value, please use a different name!')
+                    sys.exit(1)
+
+            except Exception as e:
+                pass
+            
+            
             if len(line.split(';')[0].split()) and len(line.split(';')[0].split()) != 3:
                 print('%define takes 2 args but ' + str(len(line.split())) + ' are given!');
-                sys.exit()
+                sys.exit(1)
+
             else:
-                try:
+                try:    
                     labels[line.split(';')[0].split()[1]] = line.split()[2].replace('X', 'x')
                     continue
                 except:
@@ -153,7 +167,7 @@ with open(filename) as input_file:
                 try:
                     if arg[0] == "'" and arg[-1] == "'": print(arg[1])
                     value = int(arg, 16)
-                    
+
                 except:
                     try:
                         if ('0x00') in labels[arg] and len(labels[arg]) == 6:
