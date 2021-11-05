@@ -11,6 +11,7 @@
 \****************************************************************/
 
 // libraries
+#include <avr/pgmspace.h> 
 #include <LiquidCrystal.h>
 #include <Keypad.h>
 
@@ -44,6 +45,29 @@
 
 // uncomment to rotate keypad CCW, enable LCD shield buttons
 #define CMK_HARDWARE
+
+// messages
+const char MESSAGE_ZERO[] PROGMEM = {"0"};
+const char MESSAGE_REGISTER_A_DEBUG[] PROGMEM = {"Register A: 0x"};
+const char MESSAGE_REGISTER_B_DEBUG[] PROGMEM = {"Register B: 0x"};
+const char MESSAGE_REGISTER_PC_DEBUG[] PROGMEM = {"Program Counter: 0x"};
+const char MESSAGE_REGISTER_SP_DEBUG[] PROGMEM = {"Stack pointer: 0x"};
+const char MESSAGE_REGISTER_ZF_DEBUG[] PROGMEM = {"Zero Flag: 0x"};
+const char MESSAGE_UNKNOWN_OPCODE[] PROGMEM = {"Unknown opcode:"};
+const char MESSAGE_QUESTION_MARK[] PROGMEM = {"? "};
+const char MESSAGE_CMK[] PROGMEM = {"Code Monkey King"};
+const char MESSAGE_NEW[] PROGMEM = {"NEW  "};
+const char MESSAGE_LOAD[] PROGMEM = {"LOAD "};
+const char MESSAGE_SAVE[] PROGMEM = {"SAVE "};
+const char MESSAGE_CLEAR[] PROGMEM = {"CLEAR"};
+const char MESSAGE_RUN[] PROGMEM = {"RUN  "};
+const char MESSAGE_VIEW[] PROGMEM = {"VIEW: "};
+const char MESSAGE_WAITING[] PROGMEM = {" Waiting for"};
+const char MESSAGE_INCOMING[] PROGMEM = {"incoming data..."};
+const char MESSAGE_LOADING[] PROGMEM = {"Loading..."};
+const char MESSAGE_DONE[] PROGMEM = {"  done"};
+const char MESSAGE_DONE_LONG[] PROGMEM = {"   done"};
+const char MESSAGE_SAVING[] PROGMEM = {"Saving..."};
 
 // LCD pins
 #define RS 8    // LCD reset pin
@@ -211,7 +235,7 @@ uint8_t encode_byte() {
 
 // prints 8-bit data in hex with leading zeroes
 void print_byte(uint8_t  byte) {
-  if (byte<0x10) lcd.print("0");
+  if (byte<0x10) print_message_lcd(MESSAGE_ZERO);
   lcd.print(byte, HEX);
   lcd.print(' ');
 }
@@ -220,8 +244,8 @@ void print_byte(uint8_t  byte) {
 void print_word(uint16_t  word) {
   uint8_t  MSB = byte(word >> 8);
   uint8_t  LSB = byte(word);
-  if (MSB<0x10) { lcd.print("0"); } lcd.print(MSB,HEX);
-  if (LSB<0x10) { lcd.print("0"); } lcd.print(LSB,HEX);
+  if (MSB<0x10) { print_message_lcd(MESSAGE_ZERO); } lcd.print(MSB,HEX);
+  if (LSB<0x10) { print_message_lcd(MESSAGE_ZERO); } lcd.print(LSB,HEX);
 }
 
 // dump memory
@@ -235,8 +259,26 @@ void memory_dump(uint16_t addr) {
 // prints 8-bit data in hex with leading zeroes
 void print_hex(uint8_t data)
 {  
-  if (data < 0x10) Serial.print("0"); 
+  if (data < 0x10) print_message_serial(MESSAGE_ZERO); 
   Serial.print(data, HEX);
+}
+
+// print predefined message from PROGMEM to LCD
+void print_message_lcd(const char *message) {
+  // read back a char
+  for (byte i = 0; i < strlen_P(message); i++) {
+    char character = pgm_read_byte_near(message + i);
+    lcd.print(character);
+  }
+}
+
+// print predefined message from PROGMEM to serial port
+void print_message_serial(const char *message) {
+  // read back a char
+  for (byte i = 0; i < strlen_P(message); i++) {
+    char character = pgm_read_byte_near(message + i);
+    Serial.print(character);
+  }
 }
 
 
@@ -323,23 +365,23 @@ void execute() {
         break;
       case SPR: lcd.write(byte(read_byte())); break;
       case DBG:
-        Serial.print("Register A: 0x");
+        print_message_serial(MESSAGE_REGISTER_A_DEBUG);
         Serial.println(register_A, HEX);
-        Serial.print("Register B: 0x");
+        print_message_serial(MESSAGE_REGISTER_B_DEBUG);
         Serial.println(register_B, HEX);
-        Serial.print("Program Counter: 0x");
+        print_message_serial(MESSAGE_REGISTER_PC_DEBUG);
         Serial.println(program_counter, HEX);
-        Serial.print("Stack pointer: 0x");
+        print_message_serial(MESSAGE_REGISTER_SP_DEBUG);
         Serial.println(stack_pointer, HEX);
-        Serial.print("Zero Flag: 0x");
+        print_message_serial(MESSAGE_REGISTER_ZF_DEBUG);
         Serial.println(zero_flag, HEX);
         break;
       default:
         lcd.clear();
-        lcd.print("Unknown opcode:");
+        print_message_lcd(MESSAGE_UNKNOWN_OPCODE);
         lcd.setCursor(0, 1);
         print_byte(opcode);
-        lcd.print("? ");
+        print_message_lcd(MESSAGE_QUESTION_MARK);
         return;
     }
   }
@@ -381,7 +423,7 @@ uint8_t ascii_to_hex(char ascii) {
 // reset computer
 void init_computer() {
   lcd.clear();
-  lcd.print("Code Monkey King");
+  print_message_lcd(MESSAGE_CMK);
   lcd.setCursor(0, 1);
   reset_cpu();
   reset_memory();
@@ -390,7 +432,7 @@ void init_computer() {
 // run program
 void command_run() {
   lcd.clear();
-  lcd.print("RUN  ");
+  print_message_lcd(MESSAGE_RUN);
   lcd.setCursor(3, 2);
   delay(300);
   lcd.clear();
@@ -400,22 +442,22 @@ void command_run() {
 // view memory dump
 void command_view() {
   lcd.clear();
-  lcd.print("VIEW: ");
+  print_message_lcd(MESSAGE_VIEW);
   memory_dump(encode_word());
 }
 
 // load program
 void command_load() {
   lcd.clear();
-  lcd.print("LOAD ");
+  print_message_lcd(MESSAGE_LOAD);
   delay(300);
   lcd.clear();
-  lcd.print(" Waiting for");
+  print_message_lcd(MESSAGE_WAITING);
   lcd.setCursor(0, 1);
-  lcd.print("incoming data...");
+  print_message_lcd(MESSAGE_INCOMING);
   while (Serial.available() == 0);
   lcd.clear();
-  lcd.print("Loading...");
+  print_message_lcd(MESSAGE_LOADING);
   Serial.readBytes(memory, MEMORY_SIZE);
   
   // ascii to bytes       
@@ -442,31 +484,31 @@ void command_load() {
   //Serial.println("Your program bytes loaded:");
   //for (int i = 0; i < MEMORY_SIZE; i++) print_hex(memory[i]);
 
-  lcd.print("  done");
+  print_message_lcd(MESSAGE_DONE);
   lcd.setCursor(0, 1);
 }
 
 // save program
 void command_save() {
   lcd.clear();
-  lcd.print("SAVE ");
+  print_message_lcd(MESSAGE_SAVE);
   delay(300);
   lcd.clear();
-  lcd.print("Saving...");
+  print_message_lcd(MESSAGE_SAVING);
   
   for (int i = 0; i < MEMORY_SIZE; i++) {
-    if ( memory[i] < 0x10) Serial.print("0");
+    if ( memory[i] < 0x10) print_message_serial(MESSAGE_ZERO);
     Serial.print(memory[i], HEX);
   }
   
-  lcd.print("   done");
+  print_message_lcd(MESSAGE_DONE_LONG);
   lcd.setCursor(0, 1);
 }
 
 // clear screen
 void command_clear() {
   lcd.clear();
-  lcd.print("CLEAR");
+  print_message_lcd(MESSAGE_CLEAR);
   delay(300);
   lcd.clear();
 }
@@ -474,7 +516,7 @@ void command_clear() {
 // software reset
 void command_new() {
   lcd.clear();
-  lcd.print("NEW  ");
+  print_message_lcd(MESSAGE_NEW);
   lcd.setCursor(3, 2);
   delay(300);
   init_computer();
