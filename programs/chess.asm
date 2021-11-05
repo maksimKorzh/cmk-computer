@@ -56,12 +56,16 @@
 %define BLACK_KING      0x13                        ; maps to ASCII 'k' in print_board routine
 %define EMPTY_SQUARE    0x00                        ; maps to ASCII '.' in print_board routine
 ;--------------------------------------------------------------------------------------------------------;
-%define BOARD_START     0x0200                      ; address of board array index 0
-%define BOARD_END       0x0280                      ; address of board array index 128
-%define RANK_8          0x0200
-%define RANK_7          0x0210
-%define RANK_2          0x0260
-%define RANK_1          0x0270
+%define BOARD_START     0x02ee                      ; address of board array index 0
+%define BOARD_END       0x036e                      ; address of board array index 128
+%define RANK_8          0x02ee ; + 0
+%define RANK_7          0x02fe ; + 10
+%define RANK_6          0x030e ; + 20
+%define RANK_5          0x031e ; + 30
+%define RANK_4          0x032e ; + 40
+%define RANK_3          0x033e ; + 50
+%define RANK_2          0x034e ; + 60
+%define RANK_1          0x035e ; + 70
 ;--------------------------------------------------------------------------------------------------------;
 start:                                              ; program start
   lpc game_loop                                     ; jump to init_board
@@ -87,7 +91,7 @@ ascii_pieces:                                       ; ".-pknbrq-P-KNBRQ"
 file_count:
   byte 0x00
 
-pieces: ; 174 bytes
+black_pieces:
   byte BLACK_ROOK
   byte BLACK_KNIGHT
   byte BLACK_BISHOP
@@ -97,6 +101,30 @@ pieces: ; 174 bytes
   byte BLACK_KNIGHT
   byte BLACK_ROOK
   byte 0xff
+
+black_pawns:
+  byte BLACK_PAWN
+  byte BLACK_PAWN
+  byte BLACK_PAWN
+  byte BLACK_PAWN
+  byte BLACK_PAWN
+  byte BLACK_PAWN
+  byte BLACK_PAWN
+  byte BLACK_PAWN
+  byte 0xff
+
+white_pieces:
+  byte WHITE_ROOK
+  byte WHITE_KNIGHT
+  byte WHITE_BISHOP
+  byte WHITE_QUEEN
+  byte WHITE_KING
+  byte WHITE_BISHOP
+  byte WHITE_KNIGHT
+  byte WHITE_ROOK
+  byte 0xff
+
+white_pawns:
   byte WHITE_PAWN
   byte WHITE_PAWN
   byte WHITE_PAWN
@@ -105,26 +133,18 @@ pieces: ; 174 bytes
   byte WHITE_PAWN
   byte WHITE_PAWN
   byte WHITE_PAWN
-  ;byte 0xfe
-  ;byte WHITE_ROOK
-  ;byte WHITE_KNIGHT
-  ;byte WHITE_BISHOP
-  ;byte WHITE_QUEEN
-  ;byte WHITE_KING
-  ;byte WHITE_BISHOP
-  ;byte WHITE_KNIGHT
-  ;byte WHITE_ROOK
-  ;byte 0xfe
-  ;byte BLACK_PAWN
-  ;byte BLACK_PAWN
-  ;byte BLACK_PAWN
-  ;byte BLACK_PAWN
-  ;byte BLACK_PAWN
-  ;byte BLACK_PAWN
-  ;byte BLACK_PAWN
-  ;byte BLACK_PAWN
   byte 0xff
 ;--------------------------------------------------------------------------------------------------------;
+
+game_loop:
+  sbr reset_board
+  sbr set_pieces
+  sbr print_board
+  ldi 0x0a
+  ser
+  dbg
+  byte 0x00
+
 reset_board:
   ldi 0x00
   tab
@@ -142,20 +162,86 @@ reset_next:
 
 reset_return:
   ret
-
+;--------------------------------------------------------------------------------------------------------;
 set_pieces:
-  ldi 0x10
+set_black_pieces:
+  ldi 0x00
   tab
   
-set_pieces_loop:
-  lda pieces
+set_black_pieces_loop:
+  lda black_pieces
   cmp 0xff
-  jmp set_pieces_return
-
-set_piece:
-  sta BOARD_START
+  jmp set_black_pawns
+  sta RANK_8
   inc
-  lpc set_pieces_loop
+  lpc set_black_pieces_loop
+
+set_black_pawns:
+  ldi 0x00
+  tab
+
+set_black_pawns_loop:
+  lda black_pawns
+  cmp 0xff
+  jmp set_white_pawns
+  sta RANK_7
+  inc
+  lpc set_black_pawns_loop
+
+set_white_pawns:
+  ldi 0x00
+  tab
+
+set_white_pawns_loop:
+  lda white_pawns
+  cmp 0xff
+  jmp set_white_pieces
+  sta RANK_2
+  inc
+  lpc set_white_pawns_loop
+
+set_white_pieces:
+  ldi 0x00
+  tab
+
+set_white_pieces_loop:
+  lda white_pieces
+  cmp 0xff
+  jmp set_pst
+  sta RANK_1
+  inc
+  lpc set_white_pieces_loop
+
+set_pst:
+  ldi 0x0b
+  tab
+  ldi 0x0f
+  sta RANK_5
+  inc
+  sta RANK_5
+  ldi 0x0b
+  tab
+  ldi 0x0f
+  sta RANK_4
+  inc
+  sta RANK_4
+  ldi 0x0a
+  tab
+  ldi 0x0b
+  sta RANK_6
+  inc
+  inc
+  inc
+  sta RANK_6
+  ldi 0x0a
+  tab
+  ldi 0x0b
+  sta RANK_3
+  inc
+  inc
+  inc
+  sta RANK_3
+  
 
 set_pieces_return:
   ret
@@ -206,14 +292,6 @@ print_new_line:
 print_return:
   ret
 ;--------------------------------------------------------------------------------------------------------;
-game_loop:
-  sbr reset_board
-  sbr set_pieces
-  sbr print_board
-  ldi 0x0a
-  ser
-  dbg
-  byte 0x00
 
 
 
