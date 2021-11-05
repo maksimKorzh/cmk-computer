@@ -190,8 +190,8 @@ with open(filename) as input_file:
             except IndexError:
                 pass
 
-if (len(program) > 1024):
-    print('Your program exceeds limit by', len(program) - 1024, 'bytes!');
+if (len(program) > 1500):
+    print('Your program exceeds limit by', len(program) - 1500, 'bytes!');
     sys.exit();
 
 print('\nYOUR PROGRAM LABELS:')

@@ -162,7 +162,7 @@ Keypad keypad = Keypad(makeKeymap(keymap), row_pins, col_pins, num_rows, num_col
 #define RUN   0xffff
 
 // define RAM size
-#define MEMORY_SIZE 1024
+#define MEMORY_SIZE 1500
 
 // RAM array
 uint8_t  memory[MEMORY_SIZE];
